@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ড্যাশবোর্ড - Grow Halal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="animate-fade-in">
+    <nav class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+        <div class="logo" style="font-size: 1.2rem; font-weight: 700; color: var(--accent-color);">Grow Halal</div>
+        <button onclick="logout()" class="nm-button">লগআউট</button>
+    </nav>
+
+    <main class="container">
+        <header style="margin-bottom: 40px;">
+            <h1 id="userName">স্বাগতম, মেম্বার!</h1>
+            <p style="color: var(--text-secondary);">আপনার ব্যক্তিগত ড্যাশবোর্ড</p>
+        </header>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+            <!-- Profile Info -->
+            <section class="nm-card">
+                <h3 style="margin-bottom: 20px; color: var(--accent-color);">প্রোফাইল তথ্য</h3>
+                <div class="nm-inset" style="margin-bottom: 15px;">
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">ইমেইল:</p>
+                    <p id="userEmail">loading...</p>
+                </div>
+                <div class="nm-inset">
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">স্ট্যাটাস:</p>
+                    <p id="userStatus">সক্রিয়</p>
+                </div>
+            </section>
+
+            <!-- Announcements -->
+            <section class="nm-card">
+                <h3 style="margin-bottom: 20px; color: var(--accent-color);">সাম্প্রতিক ঘোষণা</h3>
+                <div id="announcementList">
+                    <p style="color: var(--text-secondary);">কোনো নতুন ঘোষণা নেই।</p>
+                </div>
+            </section>
+
+            <!-- Meeting Info -->
+            <section class="nm-card">
+                <h3 style="margin-bottom: 20px; color: var(--accent-color);">মিটিং তথ্য</h3>
+                <div class="nm-inset">
+                    <p id="meetingInfo">পরবর্তী মিটিং এর তারিখ শীঘ্রই জানানো হবে।</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="app.js" type="module"></script>
+</body>
+
+</html>

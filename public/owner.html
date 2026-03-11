@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ওনার প্যানেল - Grow Halal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="animate-fade-in">
+    <nav class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+        <div class="logo" style="font-size: 1.2rem; font-weight: 700; color: var(--accent-color);">Grow Halal <span
+                style="font-size: 0.8rem; color: #fff;">(Owner)</span></div>
+        <button onclick="logout()" class="nm-button">লগআউট</button>
+    </nav>
+
+    <main class="container">
+        <header style="margin-bottom: 40px;">
+            <h1>ওনার কন্ট্রোল প্যানেল</h1>
+            <p style="color: var(--text-secondary);">সিস্টেম অ্যাডমিন এবং ম্যানেজার পরিচালনা</p>
+        </header>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px;">
+            <!-- Admin Management -->
+            <section class="nm-card">
+                <h3 style="margin-bottom: 20px; color: var(--accent-color);">অ্যাডমিন ও ম্যানেজার ম্যানেজমেন্ট</h3>
+                <div class="nm-inset" style="margin-bottom: 20px;">
+                    <p style="font-size: 0.9rem; margin-bottom: 10px;">ইউজার আইডি/ইমেইল দিয়ে রোল পরিবর্তন করুন</p>
+                    <input type="text" id="targetUserId" class="nm-input" placeholder="ইউজার আইডি"
+                        style="margin-bottom: 15px;">
+                    <select id="roleSelect" class="nm-input"
+                        style="margin-bottom: 15px; background: var(--surface-color);">
+                        <option value="admin">অ্যাডমিন (Admin)</option>
+                        <option value="manager">ম্যানেজার (Manager)</option>
+                        <option value="member">মেম্বার (Member)</option>
+                    </select>
+                    <button class="nm-button" style="width: 100%;">রোল আপডেট করুন</button>
+                </div>
+            </section>
+
+            <!-- System Stats -->
+            <section class="nm-card">
+                <h3 style="margin-bottom: 20px; color: var(--accent-color);">সিস্টেম স্ট্যাটাস</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="nm-inset" style="text-align: center;">
+                        <span style="font-size: 1.2rem; font-weight: bold;">0</span><br>মেম্বার
+                    </div>
+                    <div class="nm-inset" style="text-align: center;">
+                        <span style="font-size: 1.2rem; font-weight: bold;">0</span><br>অ্যাডমিন
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="app.js" type="module"></script>
+</body>
+
+</html>

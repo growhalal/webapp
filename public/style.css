@@ -1,0 +1,125 @@
+/* 
+  Grow Halal - Dark Neumorphism Design System
+  Main Colors:
+  - Background: #0f1117
+  - Surface: #0f1117
+  - Highlight: #1c1f26
+  - Shadow: #050608
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-color: #0f1117;
+    --surface-color: #0f1117;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --accent-color: #4facfe;
+    --error-color: #ff4b2b;
+    --success-color: #00f2fe;
+    
+    /* Neumorphic Shadows */
+    --nm-outer-shadow: 8px 8px 16px #050608, -8px -8px 16px #191d26;
+    --nm-outer-shadow-sm: 4px 4px 8px #050608, -4px -4px 8px #191d26;
+    --nm-inner-shadow: inset 6px 6px 12px #050608, inset -6px -6px 12px #191d26;
+    
+    --border-radius: 20px;
+    --transition-speed: 0.3s;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Utilities */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    width: 100%;
+}
+
+.nm-card {
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--nm-outer-shadow);
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.nm-inset {
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--nm-inner-shadow);
+    padding: 1rem;
+    border: none;
+}
+
+.nm-button {
+    background: var(--surface-color);
+    border-radius: 12px;
+    box-shadow: var(--nm-outer-shadow-sm);
+    border: none;
+    color: var(--text-primary);
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+    font-weight: 500;
+    outline: none;
+}
+
+.nm-button:hover {
+    box-shadow: 2px 2px 4px #050608, -2px -2px 4px #191d26;
+    transform: translateY(-2px);
+    color: var(--accent-color);
+}
+
+.nm-button:active {
+    box-shadow: var(--nm-inner-shadow);
+    transform: translateY(0);
+}
+
+.nm-input {
+    background: var(--surface-color);
+    border: none;
+    border-radius: 12px;
+    box-shadow: var(--nm-inner-shadow);
+    color: var(--text-primary);
+    padding: 12px 16px;
+    width: 100%;
+    outline: none;
+    transition: box-shadow var(--transition-speed);
+}
+
+.nm-input:focus {
+    box-shadow: inset 4px 4px 8px #030405, inset -4px -4px 8px #1c222b;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* Glassmorphism subtle effect */
+.glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
