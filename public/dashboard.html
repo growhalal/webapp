@@ -1,61 +1,916 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ড্যাশবোর্ড - Grow Halal</title>
+    <title>Dashboard - Grow Halal</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
-<body class="animate-fade-in">
-    <nav class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
-        <div class="logo" style="font-size: 1.2rem; font-weight: 700; color: var(--accent-color);">Grow Halal</div>
-        <button onclick="logout()" class="nm-button">লগআউট</button>
-    </nav>
-
-    <main class="container">
-        <header style="margin-bottom: 40px;">
-            <h1 id="userName">স্বাগতম, মেম্বার!</h1>
-            <p style="color: var(--text-secondary);">আপনার ব্যক্তিগত ড্যাশবোর্ড</p>
+<body class="theme-transition">
+    <!-- Entry animation wrapper to prevent breaking fixed elements -->
+    <div class="animate-fade">
+        <header class="container">
+            <nav>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <i class="fa-solid fa-bars-staggered" id="menuBtn"
+                        style="font-size: 1.6rem; cursor: pointer; color: var(--primary-color);"></i>
+                    <div class="logo">Grow<span>Halal</span></div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button id="langToggleBtn" class="lang-toggle" onclick="toggleLanguage()"><i
+                            class="fa-solid fa-globe"></i> BN</button>
+                    <div style="position: relative; cursor: pointer; background: var(--card-bg); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: var(--shadow-sm);"
+                        onclick="openAnnouncements()">
+                        <i class="fa-solid fa-bullhorn" style="font-size: 1.1rem; color: var(--primary-color);"></i>
+                        <div id="annoDot" class="notification-dot pulse" style="display: none; top: 0; right: 0;"></div>
+                    </div>
+                </div>
+            </nav>
         </header>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
-            <!-- Profile Info -->
-            <section class="nm-card">
-                <h3 style="margin-bottom: 20px; color: var(--accent-color);">প্রোফাইল তথ্য</h3>
-                <div class="nm-inset" style="margin-bottom: 15px;">
-                    <p style="font-size: 0.9rem; color: var(--text-secondary);">ইমেইল:</p>
-                    <p id="userEmail">loading...</p>
+
+        <main class="container" style="padding-top: 20px; padding-bottom: 110px;">
+
+
+            <div id="mainDashboard">
+                <!-- Welcome Header -->
+                <div class="mb-4 animate-fade" style="padding: 10px 0;">
+                    <h1 id="welcomeUser" style="font-size: 1.8rem; font-weight: 700; color: var(--primary-color);">Hi,
+                    </h1>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;" data-i18n="welcome-sub">Welcome to your
+                        financial hub.</p>
                 </div>
-                <div class="nm-inset">
-                    <p style="font-size: 0.9rem; color: var(--text-secondary);">স্ট্যাটাস:</p>
-                    <p id="userStatus">সক্রিয়</p>
+
+                <!-- Financial Overview -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px;">
+                    <div class="stat-card">
+                        <p data-i18n="stat-system-savings">System Savings</p>
+                        <h2 id="totalSavings">Tk0</h2>
+                    </div>
+                    <div class="stat-card">
+                        <p data-i18n="stat-personal-balance">Personal Balance</p>
+                        <h2 id="totalBalance">Tk0</h2>
+                    </div>
+                    <div class="stat-card">
+                        <p data-i18n="stat-system-profit">System Profit</p>
+                        <h2 id="totalProfit" style="color: var(--success);">Tk0</h2>
+                    </div>
+                    <div class="stat-card">
+                        <p data-i18n="stat-active-investment">Active Investment</p>
+                        <h2 id="totalInvestments" style="color: #F97316;">Tk 0</h2>
+                    </div>
+                </div> <!-- End Grid -->
+
+                <!-- Dashboard Projects List -->
+                <section class="glass-card mb-4" style="border-radius: 30px; margin-top: 25px;">
+                    <h3 style="margin-bottom: 15px; font-size: 1.1rem; color: var(--primary-color); font-weight: 800;"
+                        data-i18n="section-projects">
+                        Ongoing Projects
+                    </h3>
+                    <div id="mainDashboardInvestmentList">
+                        <!-- loader -->
+                    </div>
+                </section>
+            </div> <!-- End mainDashboard -->
+
+            <!-- Manager/Owner Section (Approval List) -->
+            <section id="approvalSection" class="glass-card mb-4" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 1.1rem; color: #fbbf24;" data-i18n="section-approvals">Pending Approvals</h3>
+                    <i class="fa-solid fa-xmark" onclick="hideSection('approvalSection')" style="cursor: pointer;"></i>
+                </div>
+                <div id="pendingDeposits" style="font-size: 0.9rem;">
+                    <!-- Pending deposits will appear here -->
                 </div>
             </section>
 
-            <!-- Announcements -->
-            <section class="nm-card">
-                <h3 style="margin-bottom: 20px; color: var(--accent-color);">সাম্প্রতিক ঘোষণা</h3>
-                <div id="announcementList">
-                    <p style="color: var(--text-secondary);">কোনো নতুন ঘোষণা নেই।</p>
+            <!-- Post Announcement Section -->
+            <section id="annoPostSection" class="glass-card mb-4" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 1.1rem; color: #fbbf24;">Post New Announcement</h3>
+                    <i class="fa-solid fa-xmark" onclick="hideSection('annoPostSection')" style="cursor: pointer;"></i>
+                </div>
+                <div class="form-group">
+                    <textarea id="annoText" class="input-box" placeholder="Write your announcement here..."
+                        style="height: 120px; margin-bottom: 15px;"></textarea>
+                    <button onclick="postAnnouncement()" class="btn btn-primary" style="width: 100%;"><i
+                            class="fa-solid fa-paper-plane"></i> Publish Now</button>
                 </div>
             </section>
 
-            <!-- Meeting Info -->
-            <section class="nm-card">
-                <h3 style="margin-bottom: 20px; color: var(--accent-color);">মিটিং তথ্য</h3>
-                <div class="nm-inset">
-                    <p id="meetingInfo">পরবর্তী মিটিং এর তারিখ শীঘ্রই জানানো হবে।</p>
+            <!-- Member Audit Section -->
+            <section id="ownerSection" class="glass-card mb-4" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 1.1rem; color: #8b5cf6;" data-i18n="section-directory">Member Directory</h3>
+                    <i class="fa-solid fa-xmark" onclick="hideSection('ownerSection')" style="cursor: pointer;"></i>
+                </div>
+
+
+                <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 25px 0;">
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="font-size: 0.9rem;"><span data-i18n="section-directory">Member Directory</span> (<span
+                            id="totalMembersCount">0</span>)</h4>
+                    <span style="font-size: 0.75rem; color: #ef4444;"><span class="due-indicator pulse"></span> Payment
+                        Due</span>
+                </div>
+                <div id="allUsersList">
+                    <!-- User list with due indicator will load here -->
                 </div>
             </section>
+
+            <!-- Restore User Role Management Section -->
+            <section id="roleSection" class="glass-card mb-4" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 1.1rem; color: #8b5cf6;">User Role Management</h3>
+                    <i class="fa-solid fa-xmark" onclick="hideSection('roleSection')" style="cursor: pointer;"></i>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Search User by Email</label>
+                    <input type="email" id="targetEmail" class="input-box" placeholder="User Email"
+                        style="margin-bottom: 15px;">
+
+                    <label class="form-label">Assign New Role</label>
+                    <select id="targetRole" class="input-box" style="margin-bottom: 15px;"
+                        onchange="togglePermissionsUI()">
+                        <option value="member">Member</option>
+                        <option value="manager">Manager</option>
+                        <option value="admin">Admin</option>
+                    </select>
+
+                    <div id="permissionsUI"
+                        style="display: none; margin-bottom: 20px; padding: 15px; background: #F9FAFB; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <label class="form-label" style="margin-bottom: 12px; color: var(--text-main);">Menu Permissions
+                            <span
+                                style="font-size: 0.7rem; font-weight: normal; color: var(--text-muted); text-transform: none;">(Check
+                                to grant access)</span></label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;"><input
+                                    type="checkbox" class="role-perm-checkbox" value="menuAddMember" checked> Add
+                                Member</label>
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;"><input
+                                    type="checkbox" class="role-perm-checkbox" value="menuApprovals" checked>
+                                Approvals</label>
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;"><input
+                                    type="checkbox" class="role-perm-checkbox" value="menuInvestments" checked>
+                                Investments</label>
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;"><input
+                                    type="checkbox" class="role-perm-checkbox" value="menuAnnouncements" checked>
+                                Announcements</label>
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;"><input
+                                    type="checkbox" class="role-perm-checkbox" value="menuExpenses" checked>
+                                Expenses</label>
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;"><input
+                                    type="checkbox" class="role-perm-checkbox" value="menuUsers" checked> Member
+                                Directory</label>
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;"><input
+                                    type="checkbox" class="role-perm-checkbox" value="menuRoles"> Permissions</label>
+                        </div>
+                    </div>
+                    <button onclick="updateUserRole()" class="btn btn-primary"
+                        style="width: 100%; background: #8b5cf6;">Update User Role</button>
+                </div>
+            </section>
+
+            <!-- Owner/Admin Section: Manage Investments -->
+            <section id="manageInvestSection" class="glass-card mb-4" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 1.1rem; color: #f97316;">Manage Investments</h3>
+                    <i class="fa-solid fa-xmark" onclick="hideSection('manageInvestSection')"
+                        style="cursor: pointer;"></i>
+                </div>
+
+                <div id="adminInvestmentControls" style="display: none;">
+                    <form id="investForm" style="margin-bottom: 25px;">
+                        <h4 style="font-size: 0.9rem; margin-bottom: 15px;"><i class="fa-solid fa-plus"></i> Add New
+                            Project
+                        </h4>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Date <span class="required-mark">*</span></label>
+                                <input type="date" id="invDate" class="input-box" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sector <span class="required-mark">*</span></label>
+                                <input type="text" id="invSector" class="input-box" placeholder="e.g. Export" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Medium <span class="required-mark">*</span></label>
+                                <input type="text" id="invMedium" class="input-box"
+                                    placeholder="e.g. Intermediary/Person" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Amount (Tk) <span class="required-mark">*</span></label>
+                                <input type="number" id="invAmount" class="input-box" placeholder="Amount (Tk)"
+                                    required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; background: #f97316;">Add
+                            Investment</button>
+                    </form>
+
+                    <div style="margin-bottom: 24px;">
+                        <button onclick="downloadInvestmentReport()" class="btn btn-primary"
+                            style="padding: 8px 16px; font-size: 0.85rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; background: var(--bg-light); border: 1px solid var(--border-color); color: var(--text-main); box-shadow: none;">
+                            <i class="fa-solid fa-download" style="color: #f97316;"></i> Download Statement
+                        </button>
+                    </div>
+                    <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 25px 0;">
+                </div>
+
+                <h4 style="font-size: 0.9rem; margin-bottom: 15px;"><i class="fa-solid fa-list-check"></i> Current
+                    Projects
+                </h4>
+                <div id="currentInvestmentsList" style="font-size: 0.9rem; margin-bottom: 25px;">
+                    <!-- Current investments load here -->
+                </div>
+
+                <h4 style="font-size: 0.9rem; margin-bottom: 15px; color: var(--success);"><i
+                        class="fa-solid fa-check-double"></i> Completed Projects
+                </h4>
+                <div id="completedInvestmentsList" style="font-size: 0.9rem;">
+                    <!-- Completed investments load here -->
+                </div>
+            </section>
+
+            <!-- Expense Management Section -->
+            <section id="expenseSection" class="glass-card mb-4" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="font-size: 1.1rem; color: var(--error);"><i class="fa-solid fa-file-invoice-dollar"></i>
+                        Expense Registry</h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button id="addExpenseBtn" onclick="openExpenseModal()" class="btn btn-primary btn-sm"
+                            style="display: none; background: var(--error); border-radius: 50px; padding: 10px 18px; white-space: nowrap; font-weight: 700; box-shadow: 0 4px 12px rgba(229, 62, 62, 0.2);">
+                            <i class="fa-solid fa-plus-circle" style="margin-right: 5px;"></i> Add Expense
+                        </button>
+                        <div class="close-btn" onclick="hideSection('expenseSection')"
+                            style="width: 32px; height: 32px; background: rgba(229, 62, 62, 0.05); color: var(--error);">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="expenseList" style="font-size: 0.9rem;">
+                    <!-- Expenses will load here -->
+                </div>
+            </section>
+
+            <!-- Reports Cabinet Section -->
+            <section id="reportSection" class="glass-card mb-4" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                    <h3 style="font-size: 1.15rem; color: var(--primary-color);"><i class="fa-solid fa-folder-tree"></i>
+                        Reports Center</h3>
+                    <div class="close-btn" onclick="hideSection('reportSection')"
+                        style="width: 32px; height: 32px; background: rgba(0,0,0,0.05);"><i
+                            class="fa-solid fa-xmark"></i>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <!-- Report Card 1: Expenses -->
+                    <div class="glass-card"
+                        style="padding: 20px; text-align: center; background: rgba(229, 62, 62, 0.02); border: 1px solid rgba(229, 62, 62, 0.1);">
+                        <i class="fa-solid fa-file-invoice-dollar"
+                            style="font-size: 2rem; color: var(--error); margin-bottom: 15px;"></i>
+                        <h4 style="margin-bottom: 10px;" data-i18n="report-expense-ledger">Expense Ledger</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;"
+                            data-i18n="desc-expense">Full registry of all
+                            system expenditures and costs.</p>
+                        <button onclick="viewReport('expenses')" class="btn btn-primary btn-sm"
+                            style="width: 100%; background: var(--error); border-radius: 8px;" data-i18n="view-report">
+                            <i class="fa-solid fa-eye"></i> View Report
+                        </button>
+                    </div>
+
+                    <!-- Report Card 2: Financial Audit -->
+                    <div class="glass-card"
+                        style="padding: 20px; text-align: center; background: rgba(45, 90, 71, 0.02); border: 1px solid rgba(45, 90, 71, 0.1);">
+                        <i class="fa-solid fa-vault"
+                            style="font-size: 2rem; color: var(--primary-color); margin-bottom: 15px;"></i>
+                        <h4 style="margin-bottom: 10px;" data-i18n="report-financial-audit">Master Financials</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;"
+                            data-i18n="desc-financial">Complete audit of total
+                            savings, balances, and profits.</p>
+                        <button onclick="viewReport('master')" class="btn btn-primary btn-sm"
+                            style="width: 100%; border-radius: 8px;" data-i18n="view-report">
+                            <i class="fa-solid fa-eye"></i> View Report
+                        </button>
+                    </div>
+
+                    <!-- Report Card 3: Investments -->
+                    <div class="glass-card"
+                        style="padding: 20px; text-align: center; background: rgba(249, 115, 22, 0.02); border: 1px solid rgba(249, 115, 22, 0.1);">
+                        <i class="fa-solid fa-chart-line"
+                            style="font-size: 2rem; color: #f97316; margin-bottom: 15px;"></i>
+                        <h4 style="margin-bottom: 10px;" data-i18n="report-investments">Investment Portfolio</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;"
+                            data-i18n="desc-investments">Detailed history of all
+                            active and completed projects.</p>
+                        <button onclick="viewReport('investments')" class="btn btn-primary btn-sm"
+                            style="width: 100%; background: #f97316; border-radius: 8px;" data-i18n="view-report">
+                            <i class="fa-solid fa-eye"></i> View Report
+                        </button>
+                    </div>
+
+                    <!-- Report Card 4: Detailed Member Audit -->
+                    <div class="glass-card"
+                        style="padding: 20px; text-align: center; background: rgba(139, 92, 246, 0.02); border: 1px solid rgba(139, 92, 246, 0.1);">
+                        <i class="fa-solid fa-id-card-clip"
+                            style="font-size: 2rem; color: #8b5cf6; margin-bottom: 15px;"></i>
+                        <h4 style="margin-bottom: 10px;" data-i18n="report-member-audit">Deep Member Audit</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;"
+                            data-i18n="desc-member">Full member database
+                            including Nominees and Document links.</p>
+                        <button onclick="viewReport('members')" class="btn btn-primary btn-sm"
+                            style="width: 100%; background: #8b5cf6; border-radius: 8px;" data-i18n="view-report">
+                            <i class="fa-solid fa-eye"></i> View Report
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+
+    </div><!-- End animate-fade -->
+
+    <!-- Side Drawer -->
+    <div id="drawerOverlay" class="drawer-overlay" onclick="closeMenu()"></div>
+    <div id="drawer" class="drawer">
+        <div class="drawer-header" style="position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h2 style="border: none; padding-bottom: 0;">Menu</h2>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 30px;">Grow Halal Management
+                    </p>
+                </div>
+                <!-- Cute Theme Toggle -->
+                <div id="themeToggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch Theme">
+                    <i class="fa-solid fa-moon"></i>
+                </div>
+            </div>
         </div>
-    </main>
 
+        <div class="drawer-content" style="flex: 1;">
+            <div class="drawer-link" onclick="closeMenu()" data-i18n="menu-dashboard">
+                <i class="fa-solid fa-grip"></i> Dashboard
+            </div>
+
+            <div class="drawer-link" onclick="openDepositModal(); closeMenu();" data-i18n="menu-add-fund">
+                <i class="fa-solid fa-circle-plus"></i> Add Fund
+            </div>
+
+            <div id="menuAddMember" class="drawer-link" onclick="openAddMemberModal()" style="display: none;"
+                data-i18n="menu-add-member">
+                <i class="fa-solid fa-user-plus"></i> Add Member
+            </div>
+
+            <div id="menuApprovals" class="drawer-link" onclick="showSection('approvalSection')" style="display: none;"
+                data-i18n="menu-approvals">
+                <i class="fa-solid fa-clock-rotate-left"></i> Approvals
+            </div>
+
+            <div id="menuInvestments" class="drawer-link" onclick="showSection('manageInvestSection')"
+                data-i18n="menu-investments">
+                <i class="fa-solid fa-chart-pie"></i> Investments
+            </div>
+
+            <div id="menuAnnouncements" class="drawer-link" onclick="showSection('annoPostSection')"
+                style="display: none;" data-i18n="menu-announcements">
+                <i class="fa-solid fa-microphone-lines"></i> Announcements
+            </div>
+
+            <div id="menuExpenses" class="drawer-link" onclick="showSection('expenseSection')"
+                data-i18n="menu-expenses">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Expenses
+            </div>
+
+            <div id="menuUsers" class="drawer-link" onclick="showSection('ownerSection')" data-i18n="menu-directory">
+                <i class="fa-solid fa-address-book"></i> Member Directory
+            </div>
+
+            <div id="menuRoles" class="drawer-link" onclick="showSection('roleSection')" style="display: none;"
+                data-i18n="menu-permissions">
+                <i class="fa-solid fa-shield-halved"></i> Permissions
+            </div>
+
+            <div id="menuReports" class="drawer-link" onclick="showSection('reportSection')" style="display: none;"
+                data-i18n="menu-reports">
+                <i class="fa-solid fa-folder-open"></i> Reports Cabinet
+            </div>
+
+            <!-- Support Menu Item -->
+            <div class="drawer-link" onclick="toggleSupport()">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <span data-i18n="menu-support"><i class="fa-solid fa-headset"></i> Support</span>
+                    <i class="fa-solid fa-chevron-down" id="supportChevron"
+                        style="font-size: 0.7rem; transition: transform 0.3s;"></i>
+                </div>
+            </div>
+
+            <!-- Sub-menu for Social Links -->
+            <div id="supportSubmenu"
+                style="display: none; padding-left: 20px; background: rgba(0,0,0,0.02); border-radius: 12px; margin: 5px 10px;">
+                <a href="https://chat.whatsapp.com/KJmXRB4YYiD3OTUdO6BH5O" target="_blank" class="drawer-link"
+                    style="text-decoration: none; font-size: 0.85rem; padding: 10px 15px; color: #25D366;"
+                    data-i18n="menu-whatsapp">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp Group
+                </a>
+            </div>
+        </div>
+
+        <div class="drawer-footer" style="padding-top: 20px; border-top: 1px solid var(--border-color);">
+            <div class="drawer-link" onclick="logout()" style="color: var(--error); background: #FFF5F5;"
+                data-i18n="menu-signout">
+                <i class="fa-solid fa-power-off"></i> Sign Out
+            </div>
+        </div>
+    </div>
+
+    <!-- Deposit Modal -->
+    <div id="depositModal" class="modal-overlay">
+        <div class="modal-content animate-fade">
+            <div class="modal-header">
+                <h2 data-i18n="modal-add-fund">Add Fund</h2>
+                <div class="close-btn" onclick="closeDepositModal()"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+
+            <form id="depositForm">
+                <div class="form-section">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-date">Date</label>
+                            <input type="date" id="depDate" class="input-box" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-month">Month</label>
+                            <select id="depMonth" class="input-box" required>
+                                <option value="January">January</option>
+                                <option value="February">February</option>
+                                <option value="March">March</option>
+                                <option value="April">April</option>
+                                <option value="May">May</option>
+                                <option value="June">June</option>
+                                <option value="July">July</option>
+                                <option value="August">August</option>
+                                <option value="September">September</option>
+                                <option value="October">October</option>
+                                <option value="November">November</option>
+                                <option value="December">December</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="label-type">Deposit Type</label>
+                        <select id="depType" class="input-box" onchange="updateDepositAmount()" required>
+                            <option value="" disabled selected>Select Type</option>
+                            <option value="Admission Fee">Admission Fee (10,000 Tk)</option>
+                            <option value="Monthly Deposit">Monthly Deposit (1,000 Tk)</option>
+                            <option value="Extra Deposit">Extra Deposit (1,500 Tk)</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-year">Year</label>
+                            <input type="number" id="depYear" class="input-box" value="2026" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-amount">Amount</label>
+                            <input type="number" id="depAmount" class="input-box" placeholder="Tk 0.00"
+                                data-i18n-placeholder="placeholder-tk" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section" style="margin-bottom: 30px;">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="label-ref">Reference / Note</label>
+                        <input type="text" id="depRef" class="input-box" placeholder="Transaction ID or Tag"
+                            data-i18n-placeholder="placeholder-ref">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="label-receipt">Receipt (Optional)</label>
+                        <input type="file" id="depReceipt" class="input-box" style="padding: 12px 25px;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;" data-i18n="btn-submit-deposit">Submit
+                        Deposit</button>
+                    <button type="button" onclick="closeDepositModal()" class="btn btn-link"
+                        data-i18n="cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Member Modal -->
+    <div id="addMemberModal" class="modal-overlay">
+        <div class="modal-content animate-fade" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 data-i18n="modal-add-member">Add Member</h2>
+                <div class="close-btn" onclick="closeAddMemberModal()"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+
+            <form id="addMemberForm">
+                <div class="form-instruction-note" data-i18n="form-note">
+                    <i class="fa-solid fa-circle-info"></i> <span class="required-mark">*</span> Marked fields must be
+                    filled out to open your account.
+                </div>
+
+                <!-- Section 1: Personal Information -->
+                <div class="form-section">
+                    <div class="form-section-title" data-i18n="title-personal"><i class="fa-solid fa-user"></i> Personal
+                        Details</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="memName" data-i18n="label-name">Full Name <span
+                                    class="required-mark">*</span></label>
+                            <input type="text" id="memName" class="input-box" placeholder="Full Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="memPhone" data-i18n="label-phone">Phone Number <span
+                                    class="required-mark">*</span></label>
+                            <input type="tel" id="memPhone" class="input-box" placeholder="01XXX-XXXXXX" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="memAddress" data-i18n="label-address">Full Address</label>
+                            <input type="text" id="memAddress" class="input-box" placeholder="Full Address">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-photo">Member Photo</label>
+                            <input type="file" id="memPhoto" class="input-box" accept="image/*"
+                                style="padding: 10px 20px;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-nid">NID / Birth Certificate</label>
+                            <input type="file" id="memNID" class="input-box" accept="image/*,application/pdf"
+                                style="padding: 10px 20px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Nominee Details -->
+                <div class="form-section">
+                    <div class="form-section-title" data-i18n="title-nominee"><i class="fa-solid fa-users"></i> Nominee
+                        Details</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="nomName" data-i18n="label-name">Nominee Name</label>
+                            <input type="text" id="nomName" class="input-box" placeholder="Nominee Name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="nomRelation" data-i18n="label-relation">Relationship</label>
+                            <input type="text" id="nomRelation" class="input-box" placeholder="e.g. Brother, Wife">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="nomPhone" data-i18n="label-phone">Nominee Phone</label>
+                            <input type="tel" id="nomPhone" class="input-box" placeholder="01XXX-XXXXXX">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="nomAddress" data-i18n="label-address">Nominee Address</label>
+                            <input type="text" id="nomAddress" class="input-box" placeholder="Full Address">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-nominee-photo">Nominee Photo</label>
+                            <input type="file" id="nomPhoto" class="input-box" accept="image/*"
+                                style="padding: 10px 20px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Login Information -->
+                <div class="form-section">
+                    <div class="form-section-title" data-i18n="title-login"><i class="fa-solid fa-key"></i> Login
+                        Information</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="memEmail" data-i18n="label-email">Email Address <span
+                                    class="required-mark">*</span></label>
+                            <input type="email" id="memEmail" class="input-box" placeholder="email@example.com"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="memPass" data-i18n="label-pass">Login Password <span
+                                    class="required-mark">*</span></label>
+                            <div class="password-toggle-wrapper">
+                                <input type="password" id="memPass" class="input-box with-toggle"
+                                    placeholder="Enter Password" required>
+                                <i class="fa-solid fa-eye password-toggle-icon" id="toggleAddMemberPass"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 2;" data-i18n="btn-create-account">Create
+                        Account</button>
+                    <button type="button" onclick="closeAddMemberModal()" class="btn btn-link" style="flex: 1;"
+                        data-i18n="cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Announcements Modal -->
+    <div id="announcementModal" class="modal-overlay">
+        <div class="modal-content animate-fade">
+            <div class="modal-header">
+                <h2 data-i18n="menu-announcements">Announcements</h2>
+                <div class="close-btn" onclick="closeAnnouncements()"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+            <div id="announcementList" style="max-height: 400px; overflow-y: auto;">
+                <!-- Announcements will load here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Member Profile Modal -->
+    <div id="memberProfileModal" class="modal-overlay">
+        <div class="modal-content animate-fade">
+            <div class="modal-header">
+                <h2 data-i18n="modal-profile">Member Profile</h2>
+                <div class="close-btn" onclick="closeMemberProfile()"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+            <div id="memberProfileContent">
+                <!-- Profile content loads here -->
+            </div>
+            <div id="profileModalActions" style="margin-top: 30px; display: flex; gap: 15px;">
+                <!-- Buttons will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Member Profile Modal -->
+    <div id="editProfileModal" class="modal-overlay">
+        <div class="modal-content animate-fade" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 data-i18n="modal-edit-profile">Edit Profile</h2>
+                <div class="close-btn" onclick="closeEditProfile()"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+            <form id="editProfileForm">
+                <input type="hidden" id="editUid">
+                <div class="form-section">
+                    <div class="form-section-title" data-i18n="title-personal">Personal Details</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="editMemName" data-i18n="label-name">Full Name</label>
+                            <input type="text" id="editMemName" class="input-box" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editMemPhone" data-i18n="label-phone">Phone Number</label>
+                            <input type="tel" id="editMemPhone" class="input-box" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editMemAddress" data-i18n="label-address">Address</label>
+                            <input type="text" id="editMemAddress" class="input-box" placeholder="Full Address"
+                                data-i18n-placeholder="label-address">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title" data-i18n="title-nominee">Nominee Details</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-name">Nominee Name</label>
+                            <input type="text" id="editNomName" class="input-box">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-relation">Relation</label>
+                            <input type="text" id="editNomRelation" class="input-box">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-phone">Nominee Phone</label>
+                            <input type="tel" id="editNomPhone" class="input-box">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-address">Nominee Address</label>
+                            <input type="text" id="editNomAddress" class="input-box" placeholder="Full Address"
+                                data-i18n-placeholder="label-address">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title" data-i18n="label-nid">Documents</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-photo">Member Photo</label>
+                            <input type="file" id="editMemPhoto" class="input-box" accept="image/*"
+                                style="padding: 10px 20px;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-nid">NID / ID Proof</label>
+                            <input type="file" id="editMemNID" class="input-box" accept="image/*,application/pdf"
+                                style="padding: 10px 20px;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="label-nominee-photo">Nominee Photo</label>
+                            <input type="file" id="editNomPhoto" class="input-box" accept="image/*"
+                                style="padding: 10px 20px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 2;" data-i18n="save">Save
+                        Changes</button>
+                    <button type="button" onclick="closeEditProfile()" class="btn btn-link" style="flex: 1;"
+                        data-i18n="cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="app.js" type="module"></script>
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="app.js?v=5" defer></script>
+    <!-- Report Preview Modal -->
+    <div id="reportPreviewModal" class="modal-overlay">
+        <div class="modal-content animate-fade" style="max-width: 900px; width: 95%;">
+            <div class="modal-header">
+                <h2 id="reportPreviewTitle">Report Preview</h2>
+                <div class="close-btn" onclick="closeReportPreview()"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+            <div id="reportFilters"
+                style="margin-bottom: 20px; padding: 15px; background: rgba(45, 90, 71, 0.05); border-radius: 12px; display: none; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 140px;">
+                    <label
+                        style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 5px;">From
+                        Date</label>
+                    <input type="date" id="reportFromDate" class="input-box" style="padding: 8px;">
+                </div>
+                <div style="flex: 1; min-width: 140px;">
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 5px;">To
+                        Date</label>
+                    <input type="date" id="reportToDate" class="input-box" style="padding: 8px;">
+                </div>
+                <button onclick="applyReportFilters()" class="btn btn-primary"
+                    style="padding: 10px 20px; border-radius: 8px; font-size: 0.85rem;">Apply Filter</button>
+            </div>
+            <div id="reportPreviewContent"
+                style="max-height: 60vh; overflow-y: auto; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <!-- Table will render here -->
+            </div>
+            <div style="margin-top: 25px; display: flex; gap: 15px; justify-content: center;">
+                <button id="downloadBtn" class="btn-download-premium">
+                    <i class="fa-solid fa-file-pdf"></i> Download Report
+                </button>
+                <button type="button" onclick="closeReportPreview()" class="btn btn-link">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdraw Investment Modal -->
+    <div id="withdrawModal" class="modal-overlay">
+        <div class="modal-content animate-fade" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 data-i18n="modal-withdraw">Withdraw Project</h2>
+                <div class="close-btn" onclick="closeWithdrawModal()"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+            <form id="withdrawForm">
+                <input type="hidden" id="withdrawInvId">
+                <input type="hidden" id="withdrawInvPrincipal">
+                <div class="form-section">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="label-date">Withdrawal Date <span
+                                class="required-mark">*</span></label>
+                        <input type="date" id="withdrawDate" class="input-box" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="label-withdraw-total">Total Returned (Capital + Profit)
+                            <span class="required-mark">*</span></label>
+                        <input type="number" id="withdrawTotal" class="input-box" placeholder="Tk 0.00"
+                            oninput="calculateWithdrawProfit()" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="label-profit">Calculated Profit</label>
+                        <input type="number" id="withdrawProfit" class="input-box" placeholder="Tk 0.00" readonly
+                            style="background: #e5e7eb; cursor: not-allowed; color: var(--success); font-weight: bold;">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; border-radius: 50px;"
+                    data-i18n="btn-confirm-withdraw">Confirm
+                    Withdrawal</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Project Details Modal -->
+    <div id="projectDetailsModal" class="modal-overlay">
+        <div class="modal-content animate-fade" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2 data-i18n="modal-project-details">Project Details</h2>
+                <div class="close-btn" onclick="closeProjectDetailsModal()"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+            <div id="projectDetailsBody" style="font-size: 0.95rem; line-height: 1.6; color: var(--text-main);">
+                <!-- details -->
+            </div>
+            <div id="projectDetailsActions" style="margin-top: 20px; display: flex; gap: 10px;">
+                <!-- Buttons -->
+            </div>
+        </div>
+    </div>
+    <!-- Expense Modal -->
+    <div id="expenseModal" class="modal-overlay">
+        <div class="modal-content animate-fade" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2 id="expenseModalTitle">Add Expense</h2>
+                <div class="close-btn" onclick="closeExpenseModal()"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+            <form id="expenseForm">
+                <input type="hidden" id="expenseId">
+                <div class="form-group">
+                    <label class="form-label" data-i18n="label-date">Date <span class="required-mark">*</span></label>
+                    <input type="date" id="expDate" class="input-box" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" data-i18n="label-category">Category <span
+                            class="required-mark">*</span></label>
+                    <input type="text" id="expCategory" class="input-box" placeholder="e.g. Office Rent" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" data-i18n="label-amount">Amount (Tk) <span
+                            class="required-mark">*</span></label>
+                    <input type="number" id="expAmount" class="input-box" placeholder="0.00"
+                        data-i18n-placeholder="placeholder-tk" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" data-i18n="label-ref">Comment / Note</label>
+                    <textarea id="expComment" class="input-box" style="height: 80px;"
+                        placeholder="Optional details..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary"
+                    style="width: 100%; border-radius: 50px; background: var(--error);" data-i18n="save">Save
+                    Expense</button>
+            </form>
+        </div>
+    </div>
+    <!-- Receipt View Modal -->
+    <div id="receiptModal" class="modal-overlay">
+        <div class="modal-content animate-fade" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Payment Receipt</h2>
+                <div class="close-btn" onclick="closeReceiptModal()"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+            <div id="receiptModalBody" style="text-align: center; padding: 10px;">
+                <div id="receiptLoading" style="padding: 30px; display: none;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                    <p style="margin-top: 10px; color: var(--text-muted); font-size: 0.9rem;">Loading Receipt...</p>
+                </div>
+                <img id="receiptImage" src=""
+                    style="max-width: 100%; border-radius: 12px; box-shadow: var(--shadow-sm);">
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar (Fixed Outside Animation Container) -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-inner">
+            <!-- Home -->
+            <button class="bottom-nav-item" onclick="showSection('mainDashboard'); closeMenu();" id="bnav-home">
+                <i class="fa-solid fa-house"></i>
+                <span data-i18n="menu-dashboard">Home</span>
+            </button>
+
+            <!-- Add Fund (Center - Elevated) -->
+            <div class="bottom-nav-center-wrap">
+                <button class="bottom-nav-center-btn" onclick="openDepositModal()" id="bnav-add">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+                <span class="bottom-nav-label" data-i18n="menu-add-fund"
+                    style="margin-top: 5px; font-weight: 700; font-size: 0.65rem; color: var(--primary-color);">Add
+                    Fund</span>
+            </div>
+
+            <!-- Profile -->
+            <button class="bottom-nav-item" onclick="openSelfProfile()" id="bnav-profile">
+                <i class="fa-solid fa-user"></i>
+                <span>Profile</span>
+            </button>
+        </div>
+    </nav>
+
 </body>
 
 </html>

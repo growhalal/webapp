@@ -1,62 +1,58 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>অ্যাডমিন প্যানেল - Grow Halal</title>
+    <title>Admin Dashboard - Grow Halal</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="animate-fade-in">
-    <nav class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
-        <div class="logo" style="font-size: 1.2rem; font-weight: 700; color: var(--accent-color);">Grow Halal <span
-                style="font-size: 0.8rem; color: #fff;">(Admin)</span></div>
-        <button onclick="logout()" class="nm-button">লগআউট</button>
-    </nav>
+<body class="animate-fade">
+    <header class="container">
+        <nav>
+            <div class="logo">Grow<span>Halal</span> <small
+                    style="font-size: 0.7rem; color: var(--text-muted);">(Admin)</small></div>
+            <button onclick="logout()" class="btn btn-link">Sign Out</button>
+        </nav>
+    </header>
 
-    <main class="container">
-        <header style="margin-bottom: 40px;">
-            <h1>অ্যাডমিন ড্যাশবোর্ড</h1>
-            <p style="color: var(--text-secondary);">মেম্বার এবং ঘোষণা পরিচালনা করুন</p>
-        </header>
+    <main class="container" style="margin-top: 40px;">
+        <div class="glass-card mb-4">
+            <h1>Admin Dashboard</h1>
+            <p style="color: var(--text-muted);">Manage members and system announcements.</p>
+        </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px;">
-            <!-- Manage Members -->
-            <section class="nm-card">
-                <h3 style="margin-bottom: 20px; color: var(--accent-color);">মেম্বার তালিকা</h3>
+            <section class="glass-card">
+                <h3 style="margin-bottom: 24px; color: var(--primary-color);">Member List</h3>
                 <div id="memberList" style="margin-bottom: 20px;">
                     <!-- Members will be listed here -->
                 </div>
-                <button class="nm-button" style="width: 100%;">নতুন মেম্বার যোগ করুন</button>
+                <button class="btn btn-primary" style="width: 100%;">Add New Member</button>
             </section>
 
-            <!-- Post Announcement -->
-            <section class="nm-card">
-                <h3 style="margin-bottom: 20px; color: var(--accent-color);">নতুন ঘোষণা তৈরি করুন</h3>
+            <section class="glass-card">
+                <h3 style="margin-bottom: 24px; color: var(--primary-color);">Create Announcement</h3>
                 <form id="announcementForm">
-                    <input type="text" id="annTitle" class="nm-input" placeholder="ঘোষণার শিরোনাম"
-                        style="margin-bottom: 15px;" required>
-                    <textarea id="annDesc" class="nm-input" placeholder="বিস্তারিত বিবরণ"
+                    <input type="text" id="annTitle" class="input-box" placeholder="Title" style="margin-bottom: 15px;"
+                        required>
+                    <textarea id="annDesc" class="input-box" placeholder="Detailed Description"
                         style="margin-bottom: 15px; height: 100px;" required></textarea>
-                    <button type="submit" class="nm-button" style="width: 100%;">পোস্ট করুন</button>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Post Announcement</button>
                 </form>
-            </section>
-
-            <!-- Manage Meetings -->
-            <section class="nm-card">
-                <h3 style="margin-bottom: 20px; color: var(--accent-color);">মিটিং আপডেট</h3>
-                <input type="text" id="meetingDate" class="nm-input" placeholder="তারিখ ও সময়"
-                    style="margin-bottom: 15px;">
-                <button class="nm-button" style="width: 100%;">আপডেট করুন</button>
             </section>
         </div>
     </main>
 
+    <footer class="container">
+        <p>&copy; 2026 Grow Halal. Admin Dashboard.</p>
+    </footer>
+
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="app.js" type="module"></script>
+    <script src="app.js?v=3" defer></script>
 </body>
 
 </html>

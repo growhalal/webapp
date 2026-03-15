@@ -1,54 +1,67 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>লগইন - Grow Halal</title>
+    <title>Login - Grow Halal</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome for eye icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
-<body style="justify-content: center; align-items: center;">
-    <div class="container" style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
-        <div class="nm-card animate-fade-in" style="width: 100%; max-width: 400px; padding: 40px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <h2 style="font-size: 2rem; color: var(--accent-color);">স্বাগতম</h2>
-                <p style="color: var(--text-secondary);">আপনার অ্যাকাউন্টে লগইন করুন</p>
+<body>
+    <div class="flex-center">
+        <div class="glass-card animate-fade" style="width: 100%; max-width: 400px; padding: 50px 40px; margin: 20px; position: relative;">
+            <div style="position: absolute; top: 20px; left: 20px;">
+                <div id="themeToggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch Theme">
+                    <i class="fa-solid fa-moon"></i>
+                </div>
+            </div>
+            <div style="position: absolute; top: 20px; right: 20px;">
+                <button id="langToggleBtn" class="lang-toggle" onclick="toggleLanguage()"><i class="fa-solid fa-globe"></i> BN</button>
+            </div>
+            <div class="text-center mb-4">
+                <h1 data-i18n="login-welcome" style="font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Welcome</h1>
+                <p data-i18n="login-sub" style="color: var(--text-muted); font-size: 0.95rem; font-weight: 500;">
+                    Secure and Shariah-compliant financial management.
+                </p>
             </div>
 
             <form id="loginForm">
-                <div style="margin-bottom: 25px;">
-                    <label
-                        style="display: block; margin-bottom: 10px; font-size: 0.9rem; color: var(--text-secondary);">ইমেইল
-                        অ্যাড্রেস</label>
-                    <input type="email" id="email" class="nm-input" placeholder="example@email.com" required>
+                <div class="form-group">
+                    <i class="fa-solid fa-envelope input-icon"></i>
+                    <input type="email" id="email" class="input-box with-icon" placeholder="Email Address" required>
                 </div>
-                <div style="margin-bottom: 30px;">
-                    <label
-                        style="display: block; margin-bottom: 10px; font-size: 0.9rem; color: var(--text-secondary);">পাসওয়ার্ড</label>
-                    <input type="password" id="password" class="nm-input" placeholder="••••••••" required>
+                <div class="form-group">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input type="password" id="password" class="input-box with-icon" placeholder="Password" required>
+                    <i class="fa-regular fa-eye password-toggle" id="togglePassword"></i>
                 </div>
 
-                <button type="submit" class="nm-button"
-                    style="width: 100%; margin-bottom: 20px; padding: 15px;">লগইন</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;" data-i18n="login-btn">Login</button>
 
                 <div id="loginError"
-                    style="color: var(--error-color); font-size: 0.85rem; text-align: center; display: none;">
-                    ইমেইল বা পাসওয়ার্ড ভুল।
+                    style="background: var(--card-bg); color: var(--error); padding: 12px; border-radius: 12px; font-size: 0.85rem; text-align: center; margin-top: 20px; display: none; border: 1px solid #FED7D7;">
+                    Invalid email or password.
                 </div>
             </form>
 
-            <div style="text-align: center; margin-top: 20px;">
-                <a href="index.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;">←
-                    মূল পেজে ফিরে যান</a>
+            <div class="text-center mt-4">
+                <button onclick="forgotPassword()" class="btn btn-link" style="margin: 0 auto;" data-i18n="login-forgot">Forgot Password?</button>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="index.html" class="btn btn-link" style="font-size: 0.85rem;" data-i18n="login-back">← Back to Home</a>
             </div>
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="app.js" type="module"></script>
+    <script src="app.js?v=3" defer></script>
 </body>
 
 </html>

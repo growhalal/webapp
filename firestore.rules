@@ -1,17 +1,22 @@
-rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
     
     // Helper function to check roles
     function hasRole(role) {
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
     }
 
     // User profiles
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow write: if hasRole('owner') || (request.auth != null && request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+      allow write: if hasRole('owner') || 
+                      ( (hasRole('admin') || hasRole('manager')) && 
+                        (!exists(/databases/$(database)/documents/users/$(userId)) || 
+                         (get(/databases/$(database)/documents/users/$(userId)).data.role != 'owner' && 
+                          get(/databases/$(database)/documents/users/$(userId)).data.email != 'growhalal0@gmail.com')) ) ||
+                      (request.auth != null && request.auth.uid == userId);
     }
 
     // Announcements
@@ -20,10 +25,30 @@ service cloud.firestore {
       allow write: if hasRole('owner') || hasRole('admin');
     }
 
-    // Meetings
-    match /meetings/{meetingId} {
+    // Deposits
+    match /deposits/{depId} {
       allow read: if request.auth != null;
-      allow write: if hasRole('owner') || hasRole('admin');
+      allow create: if request.auth != null;
+      allow update, delete: if hasRole('owner') || hasRole('manager');
+    }
+
+    // Investments
+    match /investments/{invId} {
+      allow read: if request.auth != null;
+      allow write: if hasRole('owner') || hasRole('manager');
+    }
+
+    // System Stats
+    match /system/{docId} {
+      allow read: if request.auth != null;
+      allow write: if hasRole('owner') || hasRole('manager');
+    }
+
+    // Expenses
+    match /expenses/{expId} {
+      allow read: if request.auth != null;
+      allow write: if hasRole('owner') || hasRole('admin') || hasRole('manager') || 
+                   (request.auth != null && "menuExpenses" in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions);
     }
   }
 }
