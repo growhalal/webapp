@@ -648,16 +648,31 @@ footer {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: #EF4444;
     display: inline-block;
+}
+
+.due-monthly {
+    background: #EF4444;
+    /* Red */
     box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    animation: pulse-red 2s infinite;
 }
 
-.pulse {
-    animation: pulse-animation 2s infinite;
+.due-admission {
+    background: #F59E0B;
+    /* Amber/Orange */
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+    animation: pulse-orange 2s infinite;
 }
 
-@keyframes pulse-animation {
+.due-extra {
+    background: #8B5CF6;
+    /* Purple/Violet */
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+    animation: pulse-purple 2s infinite;
+}
+
+@keyframes pulse-red {
     0% {
         box-shadow: 0 0 0 0px rgba(239, 68, 68, 0.7);
     }
@@ -668,6 +683,34 @@ footer {
 
     100% {
         box-shadow: 0 0 0 0px rgba(239, 68, 68, 0);
+    }
+}
+
+@keyframes pulse-orange {
+    0% {
+        box-shadow: 0 0 0 0px rgba(245, 158, 11, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0px rgba(245, 158, 11, 0);
+    }
+}
+
+@keyframes pulse-purple {
+    0% {
+        box-shadow: 0 0 0 0px rgba(139, 92, 246, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(139, 92, 246, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0px rgba(139, 92, 246, 0);
     }
 }
 
@@ -1075,3 +1118,228 @@ footer {
     opacity: 0.9;
     transform: scale(1.02);
 }
+
+/* Report Table Download Buttons */
+.btn-download-icon {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    color: var(--primary-color);
+}
+
+.btn-download-icon:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn-download-icon i {
+    font-size: 0.9rem;
+}
+
+[data-theme='dark'] .btn-download-icon {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Multi-Category Deposit Styles */
+.deposit-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.category-item {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 15px;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.category-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+}
+
+.pill-checkbox {
+    display: none;
+}
+
+.pill-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 5px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    user-select: none;
+}
+
+.pill-checkbox:checked + .pill-label {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.total-display-card {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 20px;
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 10px 20px rgba(45, 90, 71, 0.2);
+}
+
+.total-display-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.9;
+}
+
+.total-display-amount {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.category-toggle-all {
+    font-size: 0.75rem;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+/* Custom Dropdown Checkbox (Round) */
+.custom-dropdown-container {
+    position: relative;
+    width: 100%;
+}
+
+.custom-dropdown-header {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    padding: 12px 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    transition: all 0.2s;
+}
+
+.custom-dropdown-header i {
+    position: static !important;
+    transform: none !important;
+    pointer-events: auto !important;
+}
+
+.custom-dropdown-header:hover {
+    border-color: var(--primary-color);
+}
+
+.custom-dropdown-list {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    padding: 8px;
+    display: none;
+}
+
+.custom-dropdown-list.active {
+    display: block;
+}
+
+.dropdown-item-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s;
+    margin-bottom: 2px;
+}
+
+.dropdown-item-row:hover {
+    background: rgba(45, 90, 71, 0.05);
+}
+
+.dropdown-item-row input[type="checkbox"] {
+    display: none;
+}
+
+.round-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    margin-right: 12px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s;
+    background: var(--bg-light);
+}
+
+.dropdown-item-row input[type="checkbox"]:checked + .round-check {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.dropdown-item-row input[type="checkbox"]:checked + .round-check::after {
+    content: '\f00c';
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: white;
+    font-size: 11px;
+}
+
+.dropdown-item-text {
+    font-size: 0.9rem;
+    color: var(--text-main);
+    font-weight: 500;
+}

@@ -22,6 +22,14 @@ const secondaryAuth = secondaryApp.auth();
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Global Data Caches
+const userNamesMap = {};
+
+// Fee Constants
+const REQUIRED_ADMISSION_FEE = 10000;
+const REQUIRED_MONTHLY_FEE = 1000;
+const REQUIRED_EXTRA_FEE = 1500;
+
 // --- LANGUAGE / I18N SYSTEM ---
 let currentLang = localStorage.getItem('growHalalLang') || 'en';
 let currentTheme = localStorage.getItem('growHalalTheme') || 'light';
@@ -125,10 +133,12 @@ const translations = {
         'report-financial-audit': 'Master Financials',
         'report-investments': 'Investment Portfolio',
         'report-member-audit': 'Deep Member Audit',
+        'report-deposit-ledger': 'Deposit Ledger',
         'desc-expense': 'Full registry of all system expenditures and costs.',
         'desc-financial': 'Complete audit of total savings, balances, and profits.',
         'desc-investments': 'Detailed history of all active and completed projects.',
         'desc-member': 'Full member database including Nominees and Document links.',
+        'desc-deposit': 'Track all member deposits and download transaction receipts.',
         // Profile & Others
         'modal-profile': 'Member Profile',
         'btn-download-pdf': 'Download PDF',
@@ -138,7 +148,42 @@ const translations = {
         'label-withdraw-total': 'Total Returned (Capital + Profit)',
         'label-profit': 'Calculated Profit',
         'label-category': 'Category',
-        'btn-confirm-withdraw': 'Confirm Withdrawal'
+        'btn-confirm-withdraw': 'Confirm Withdrawal',
+        'label-join-date': 'Join Date',
+        'label-total-savings': 'Total Savings',
+        'label-profit-share': 'Profit Share',
+        'label-status': 'Status',
+        'status-dues': 'Dues Pending',
+        'status-regular': 'Regular',
+        'label-outstanding-breakdown': 'Outstanding Fees Breakdown',
+        'label-nominee-info': 'Nominee Information',
+        'label-nid-doc': 'ID Document (NID)',
+        'label-authorized-sig': 'Authorized Signature',
+        'label-report-date': 'Report Date',
+        'label-operator': 'Operator',
+        'label-member-uid': 'Member UID',
+        'label-official-report': 'Official Member Comprehensive Report',
+        'label-system-report': 'OFFICIAL SYSTEM REPORT',
+        'report-member-statement': 'Member Statement',
+        'label-history': 'Deposit History',
+        'label-none': 'None',
+        'label-paid': 'Paid',
+        'label-project-name': 'Project Name/Sector',
+        'label-medium': 'Medium',
+        'label-invested-amount': 'Invested Amount',
+        'label-start-date': 'Start Date',
+        'label-withdraw-date': 'Withdraw Date',
+        'label-completed': 'Completed',
+        'label-ongoing': 'Ongoing',
+        'label-total-company-share': 'Total Accrued Company Share',
+        'label-sl': 'S/L',
+        'label-payout': 'Payout',
+        'label-description': 'Description',
+        'label-member-profit': 'Member Profit',
+        'label-company-share': 'Company Share',
+        'label-invested': 'Invested',
+        'label-member': 'Member',
+        'label-share-pct': 'Share (%)'
     },
     'bn': {
         // Sidebar
@@ -213,10 +258,12 @@ const translations = {
         'report-financial-audit': 'মাস্টার ফিনান্সিয়াল',
         'report-investments': 'বিনিয়োগ পোর্টফোলিও',
         'report-member-audit': 'সদস্য অডিট',
+        'report-deposit-ledger': 'ডিপোজিট লেজার',
         'desc-expense': 'সিস্টেমের সমস্ত ব্যয় এবং খরচের সম্পূর্ণ রেজিস্ট্রি।',
         'desc-financial': 'মোট সঞ্চয়, ব্যালেন্স এবং লাভের সম্পূর্ণ অডিট।',
         'desc-investments': 'সমস্ত চলমান এবং সম্পন্ন প্রকল্পের বিস্তারিত ইতিহাস।',
         'desc-member': 'নমিনী এবং ডকুমেন্ট লিঙ্ক সহ সম্পূর্ণ সদস্য ডাটাবেস।',
+        'desc-deposit': 'সদস্যদের সমস্ত জমার তথ্য এবং ট্রানজিশন রিসিট ডাউনলোড করুন।',
         // Profile & Others
         'modal-profile': 'সদস্য প্রোফাইল',
         'btn-download-pdf': 'পিডিএফ ডাউনলোড',
@@ -226,7 +273,42 @@ const translations = {
         'label-withdraw-total': 'মোট ফেরত (মূলধন + লাভ)',
         'label-profit': 'হিসাবকৃত লাভ',
         'label-category': 'ধরণ/বিভাগ',
-        'btn-confirm-withdraw': 'উত্তোলন নিশ্চিত করুন'
+        'btn-confirm-withdraw': 'উত্তোলন নিশ্চিত করুন',
+        'label-join-date': 'যোগদানের তারিখ',
+        'label-total-savings': 'মোট সঞ্চয়',
+        'label-profit-share': 'লভ্যাংশ',
+        'label-status': 'অবস্থা',
+        'status-dues': 'বকেয়া আছে',
+        'status-regular': 'নিয়মিত',
+        'label-outstanding-breakdown': 'বকেয়া ফির বিবরণ',
+        'label-nominee-info': 'নমিনীর তথ্য',
+        'label-nid-doc': 'পরিচয়পত্র (এনআইডি)',
+        'label-authorized-sig': 'কর্তৃপক্ষের স্বাক্ষর',
+        'label-report-date': 'রিপোর্টের তারিখ',
+        'label-operator': 'অপারেটর',
+        'label-member-uid': 'সদস্য আইডি',
+        'label-official-report': 'অফিসিয়াল সদস্য বিস্তারিত রিপোর্ট',
+        'label-system-report': 'অফিসিয়াল সিস্টেম রিপোর্ট',
+        'report-member-statement': 'সদস্য স্টেটমেন্ট',
+        'label-history': 'জমার ইতিহাস',
+        'label-none': 'নেই',
+        'label-paid': 'পরিশোধিত',
+        'label-project-name': 'প্রকল্পের নাম/খাত',
+        'label-medium': 'মাধ্যম',
+        'label-invested-amount': 'বিনিয়োগের পরিমাণ',
+        'label-start-date': 'শুরুর তারিখ',
+        'label-withdraw-date': 'উত্তোলনের তারিখ',
+        'label-completed': 'সম্পন্ন',
+        'label-ongoing': 'চলমান',
+        'label-total-company-share': 'মোট জমা হওয়া কোম্পানি শেয়ার',
+        'label-sl': 'ক্রমিক',
+        'label-payout': 'পরিশোধিত টাকা',
+        'label-description': 'বিবরণ',
+        'label-member-profit': 'সদস্য লাভ',
+        'label-company-share': 'কোম্পানি লাভ',
+        'label-invested': 'বিনিয়োগ',
+        'label-member': 'সদস্য',
+        'label-share-pct': 'শেয়ার (%)'
     }
 };
 
@@ -331,6 +413,21 @@ async function compressAndConvertToBase64(file, maxWidth = 800, maxHeight = 800,
     });
 }
 
+// --- FILE DOWNLOAD HELPER ---
+window.downloadBase64File = (base64Data, filename) => {
+    try {
+        const link = document.createElement('a');
+        link.href = base64Data;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (e) {
+        console.error("Download failed:", e);
+        alert("Download failed. Please try again.");
+    }
+};
+
 // --- NAVIGATION & MENU ---
 
 if (menuBtn) {
@@ -378,7 +475,7 @@ window.toggleSupport = () => {
 };
 
 window.showSection = (sectionId) => {
-    const sections = ['mainDashboard', 'approvalSection', 'ownerSection', 'manageInvestSection', 'annoPostSection', 'roleSection', 'expenseSection', 'reportSection'];
+    const sections = ['mainDashboard', 'approvalSection', 'ownerSection', 'manageInvestSection', 'annoPostSection', 'roleSection', 'expenseSection', 'reportSection', 'companyAccountSection'];
     sections.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = id === sectionId ? 'block' : 'none';
@@ -472,6 +569,53 @@ function setupDashboard(user) {
             userRole = data.role || 'member';
             if (user.email && user.email.toLowerCase() === 'growhalal0@gmail.com') userRole = 'owner';
 
+            // --- COMPANY ACCOUNT LOGIC ---
+
+            window.loadCompanyAccount = () => {
+                db.collection('companyAccount').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+                    const listEl = document.getElementById('companyLedgerList');
+                    const balanceEl = document.getElementById('companyTotalBalance');
+                    if (!listEl || !balanceEl) return;
+
+                    listEl.innerHTML = '';
+                    let totalBalance = 0;
+
+                    if (snapshot.empty) {
+                        listEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No transactions in Company Account yet.</p>';
+                        balanceEl.innerText = "0.00";
+                        return;
+                    }
+
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const amount = data.amount || 0;
+                        totalBalance += amount;
+
+                        const div = document.createElement('div');
+                        div.style.background = 'var(--bg-light)';
+                        div.style.padding = '15px';
+                        div.style.borderRadius = '10px';
+                        div.style.border = '1px solid var(--border-color)';
+                        div.style.display = 'flex';
+                        div.style.justifyContent = 'space-between';
+                        div.style.alignItems = 'center';
+                        div.innerHTML = `
+                <div>
+                    <strong style="color: var(--text-main); font-size: 0.95rem;">${data.type}</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Source: ${data.sourceUser} • ${data.date}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">${data.description || ''}</div>
+                </div>
+                <div style="font-weight: bold; color: var(--success); font-size: 1.1rem;">
+                    + Tk ${formatNumber(amount).replace('Tk ', '')}
+                </div>
+            `;
+                        listEl.appendChild(div);
+                    });
+
+                    balanceEl.innerText = formatNumber(totalBalance).replace('Tk ', '');
+                });
+            };
+
             // --- STRICT RBAC LOGIC ---
             // 1. Always Visible to Everyone
             ['menuInvestments', 'menuExpenses', 'menuUsers'].forEach(id => {
@@ -480,8 +624,8 @@ function setupDashboard(user) {
             });
 
             // 2. Owner-Controlled Access (Restricted Items)
-            // Add Member, Approvals, Post Announcements, Permissions, Reports
-            const restrictedPerms = ['menuAddMember', 'menuApprovals', 'menuAnnouncements', 'menuRoles', 'menuReports'];
+            // Add Member, Approvals, Post Announcements, Permissions, Reports, Company Account
+            const restrictedPerms = ['menuAddMember', 'menuApprovals', 'menuAnnouncements', 'menuRoles', 'menuReports', 'menuCompanyAccount'];
             restrictedPerms.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -490,6 +634,12 @@ function setupDashboard(user) {
                     el.style.display = (userRole === 'owner' || hasExplicitPerm) ? 'flex' : 'none';
                 }
             });
+
+            // Show Archive Report Card only if Owner or explicitly granted Reports
+            const archiveCard = document.getElementById('reportArchiveCard');
+            if (archiveCard) {
+                archiveCard.style.display = (userRole === 'owner') ? 'block' : 'none';
+            }
 
             // 3. Admin/Manager Controls inside sections
             // Show/Hide Admin Controls in Investments Section
@@ -515,6 +665,9 @@ function setupDashboard(user) {
             loadAllUsers(); // Directory is now public
             loadManageInvestments();
             loadExpenses();
+            if (userRole === 'owner' || (data.permissions && data.permissions.includes('menuCompanyAccount'))) {
+                loadCompanyAccount();
+            }
         } else {
             // Fallback: If Owner logs in but profile is missing, create it.
             if (user.email && user.email.toLowerCase() === 'growhalal0@gmail.com') {
@@ -542,16 +695,57 @@ function setupDashboard(user) {
         snapshot.forEach(doc => {
             globalSavings += (doc.data().savings || 0);
         });
+        _globalSavingsSum = globalSavings; // Update global cache for PDF reporting
         document.getElementById('totalSavings').innerText = formatNumber(globalSavings);
     });
 
-    // 3. Global System Profit
     db.collection('system').doc('stats').onSnapshot((doc) => {
         const el = document.getElementById('totalProfit');
         if (el) {
-            el.innerText = formatNumber(doc.exists ? (doc.data().totalProfit || 0) : 0);
+            const total = doc.exists ? (doc.data().totalProfit || 0) : 0;
+            el.innerText = formatNumber(total);
+            
+            // Virtual Company Share Indicator for Owners/Admins
+            if (userRole === 'owner' || userRole === 'admin') {
+                updateCompanyAccruedIndicator(total);
+            }
         }
     });
+
+    async function updateCompanyAccruedIndicator(totalSystemProfit) {
+        try {
+            const users = await db.collection('users').get();
+            let totalSavings = 0;
+            users.forEach(u => totalSavings += (u.data().savings || 0));
+            
+            let totalAccruedCompany = 0;
+            users.forEach(u => {
+                const d = u.data();
+                const uSavings = d.savings || 0;
+                const profitPct = d.profitPercentage || 100;
+                if (totalSavings > 0) {
+                    const totalSlice = (uSavings / totalSavings) * totalSystemProfit;
+                    totalAccruedCompany += totalSlice * (1 - (profitPct / 100));
+                }
+            });
+
+            let indicator = document.getElementById('companyAccruedDisplay');
+            if (!indicator) {
+                const profitCard = document.querySelector('.stat-card i.fa-chart-line').closest('.stat-card');
+                if (profitCard) {
+                    indicator = document.createElement('div');
+                    indicator.id = 'companyAccruedDisplay';
+                    indicator.style.fontSize = '0.7rem';
+                    indicator.style.color = 'var(--text-muted)';
+                    indicator.style.marginTop = '5px';
+                    profitCard.appendChild(indicator);
+                }
+            }
+            if (indicator) {
+                indicator.innerText = `Accrued Co. Share: ${formatNumber(totalAccruedCompany.toFixed(2))}`;
+            }
+        } catch (e) { console.error("Stats update error:", e); }
+    }
 
     // 4. Global Current Investments Stat (Sum of active investments)
     db.collection('investments').where('status', '==', 'active').onSnapshot((snapshot) => {
@@ -595,6 +789,7 @@ if (addMemberForm) {
                 balance: 0,
                 savings: 0,
                 profit: 0,
+                profitPercentage: parseFloat(document.getElementById('memProfitPct').value) || 100,
                 investmentsCount: 0,
                 nominee: {
                     name: document.getElementById('nomName').value || 'N/A',
@@ -653,18 +848,258 @@ if (addMemberForm) {
 
 // --- DEPOSIT SYSTEM ---
 
-window.openDepositAmount = () => {
-    const type = document.getElementById('depType').value;
-    const amountInput = document.getElementById('depAmount');
-    if (type === 'Admission Fee') amountInput.value = 10000;
-    else if (type === 'Monthly Deposit') amountInput.value = 1000;
-    else if (type === 'Extra Deposit') amountInput.value = 1500;
-    else amountInput.value = '';
-};
-// updateDepositAmount is identical — single function handles both
-window.updateDepositAmount = window.openDepositAmount;
+window.calculateDepositTotal = () => {
+    let total = 0;
 
-window.openDepositModal = () => depositModal.style.display = 'flex';
+    // 1. Admission Fee
+    const admSection = document.getElementById('admFeeSection');
+    if (admSection && admSection.style.display !== 'none') {
+        total += parseFloat(document.getElementById('admAmount').value) || 0;
+    }
+
+    // 2. Monthly Deposits
+    const monthlyRate = parseFloat(document.getElementById('monthlyRate').value) || 0;
+    const selectedMonths = document.querySelectorAll('.month-check:checked');
+    total += (selectedMonths.length * monthlyRate);
+
+    // 3. Extra Deposits
+    const extraRate = parseFloat(document.getElementById('extraRate').value) || 0;
+    const selectedExtras = document.querySelectorAll('.extra-check:checked');
+    total += (selectedExtras.length * extraRate);
+
+    // 4. Other
+    total += parseFloat(document.getElementById('otherAmount').value) || 0;
+
+    document.getElementById('depTotalDisplay').innerText = `Tk ${total.toLocaleString('en-IN')}.00`;
+    document.getElementById('depAmount').value = total;
+};
+
+// Custom Dropdown UI Logic
+window.toggleCustomDropdown = (id) => {
+    // Close others
+    document.querySelectorAll('.custom-dropdown-list').forEach(list => {
+        if(list.id !== id) list.classList.remove('active');
+    });
+    const list = document.getElementById(id);
+    if(list) list.classList.toggle('active');
+};
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.custom-dropdown-container')) {
+        document.querySelectorAll('.custom-dropdown-list').forEach(list => {
+            list.classList.remove('active');
+        });
+    }
+});
+
+window.updateMonthSelection = () => {
+    const selected = document.querySelectorAll('.month-check:checked');
+    const label = document.getElementById('monthDropdownLabel');
+    if(selected.length === 0) {
+        label.innerText = 'Select Months...';
+    } else if(selected.length === 1) {
+        label.innerText = selected[0].value;
+    } else {
+        label.innerText = `${selected.length} Months Selected`;
+    }
+    window.calculateDepositTotal();
+};
+
+window.updateExtraSelection = () => {
+    const selected = document.querySelectorAll('.extra-check:checked');
+    const label = document.getElementById('extraDropdownLabel');
+    if(selected.length === 0) {
+        label.innerText = 'Select Term...';
+    } else if(selected.length === 1) {
+        label.innerText = selected[0].value;
+    } else {
+        label.innerText = `${selected.length} Terms Selected`;
+    }
+    window.calculateDepositTotal();
+};
+
+// Toggle all left here just in case legacy UI is cached
+window.toggleAllMonths = () => {
+    const checks = document.querySelectorAll('.month-check:not(:disabled)');
+    if(checks.length === 0) return;
+    const allChecked = Array.from(checks).every(c => c.checked);
+    checks.forEach(c => c.checked = !allChecked);
+    window.updateMonthSelection();
+};
+
+let _currentUserDeposits = [];
+let _currentUserJoinDate = null;
+
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+window.renderDepositOptions = () => {
+    const monthList = document.getElementById('monthDropdownList');
+    const extraList = document.getElementById('extraDropdownList');
+    if (!monthList || !extraList) return;
+
+    const currentYear = new Date().getFullYear();
+    const nextYear = currentYear + 1;
+    
+    // Population helper
+    const addYearHeader = (container, year) => {
+        const header = document.createElement('div');
+        header.style.cssText = "padding: 10px; font-size: 0.7rem; color: var(--primary-color); font-weight: 800; background: var(--bg-light); border-bottom: 1px solid var(--border-color); border-top: 1px solid var(--border-color);";
+        header.innerText = year;
+        container.appendChild(header);
+    };
+
+    const addOption = (container, type, value, text) => {
+        const row = document.createElement('label');
+        row.className = 'dropdown-item-row';
+        row.innerHTML = `
+            <input type="checkbox" class="${type}-check custom-chk" value="${value}" onchange="update${type === 'month' ? 'Month' : 'Extra'}Selection()">
+            <span class="round-check"></span>
+            <span class="dropdown-item-text">${text}</span>
+        `;
+        container.appendChild(row);
+    };
+
+    monthList.innerHTML = '';
+    extraList.innerHTML = '';
+
+    // December 2025 specifically
+    addYearHeader(monthList, 2025);
+    addOption(monthList, 'month', 'December 2025', 'December 2025');
+    
+    addYearHeader(extraList, 2025);
+    addOption(extraList, 'extra', 'January-June 2025', 'January-June 2025');
+    addOption(extraList, 'extra', 'July-December 2025', 'July-December 2025');
+
+    // Current and Next Year
+    [currentYear, nextYear].forEach(year => {
+        if (year <= 2025) return; // Already handled 2025
+        
+        addYearHeader(monthList, year);
+        MONTH_NAMES.forEach(m => addOption(monthList, 'month', `${m} ${year}`, `${m} ${year}`));
+        
+        addYearHeader(extraList, year);
+        addOption(extraList, 'extra', `January-June ${year}`, `January-June ${year}`);
+        addOption(extraList, 'extra', `July-December ${year}`, `July-December ${year}`);
+    });
+};
+
+window.applyDisabledStatusToDropdowns = () => {
+    // Disable months
+    const paidMonthlyStrings = _currentUserDeposits
+        .filter(d => d.type === 'Monthly Deposit')
+        .map(d => `${d.month} ${d.year}`);
+        
+    document.querySelectorAll('.month-check').forEach(c => {
+        const parts = c.value.split(' ');
+        const monthName = parts[0];
+        const year = parseInt(parts[1]);
+        const monthIdx = MONTH_NAMES.indexOf(monthName);
+        
+        let shouldDisable = paidMonthlyStrings.includes(c.value);
+        
+        // Also disable if before join date
+        if (!shouldDisable && _currentUserJoinDate) {
+            const jYear = _currentUserJoinDate.getFullYear();
+            const jMonthIdx = _currentUserJoinDate.getMonth(); // 0-11
+            
+            if (year < jYear || (year === jYear && monthIdx < jMonthIdx)) {
+                shouldDisable = true;
+            }
+        }
+
+        if (shouldDisable) {
+            c.checked = false;
+            c.disabled = true;
+            c.closest('.dropdown-item-row').style.opacity = '0.5';
+            c.closest('.dropdown-item-row').style.cursor = 'not-allowed';
+            c.closest('.dropdown-item-row').title = "Month before joining or already paid";
+        } else {
+            c.disabled = false;
+            c.closest('.dropdown-item-row').style.opacity = '1';
+            c.closest('.dropdown-item-row').style.cursor = 'pointer';
+            c.closest('.dropdown-item-row').title = "";
+        }
+    });
+    
+    // Disable extra terms
+    const paidExtraStrings = _currentUserDeposits
+        .filter(d => d.type === 'Extra Deposit')
+        .map(d => `${d.month} ${d.year}`);
+        
+    document.querySelectorAll('.extra-check').forEach(c => {
+        if (paidExtraStrings.includes(c.value)) {
+            c.checked = false;
+            c.disabled = true;
+            c.closest('.dropdown-item-row').style.opacity = '0.5';
+            c.closest('.dropdown-item-row').style.cursor = 'not-allowed';
+        } else {
+            c.disabled = false;
+            c.closest('.dropdown-item-row').style.opacity = '1';
+            c.closest('.dropdown-item-row').style.cursor = 'pointer';
+        }
+    });
+
+    // Update labels since we might have unchecked items
+    window.updateMonthSelection();
+    window.updateExtraSelection();
+};
+
+window.openDepositModal = async () => {
+    // Populate dynamic options
+    window.renderDepositOptions();
+
+    // Reset form and custom dropdowns
+    const depositFormEl = document.getElementById('depositForm');
+    if(depositFormEl) depositFormEl.reset();
+    document.querySelectorAll('.custom-chk').forEach(c => c.checked = false);
+    document.getElementById('monthDropdownLabel').innerText = 'Select Months...';
+    document.getElementById('extraDropdownLabel').innerText = 'Select Term...';
+
+    depositModal.style.display = 'flex';
+    if(currentUser) {
+        try {
+            // Fetch user join date
+            const userDoc = await db.collection('users').doc(currentUser.uid).get();
+            if (userDoc.exists) {
+                const data = userDoc.data();
+                _currentUserJoinDate = data.createdAt ? new Date(data.createdAt.seconds * 1000) : null;
+            }
+
+            const depsSnap = await db.collection('deposits')
+                .where('uid', '==', currentUser.uid)
+                .get();
+            
+            _currentUserDeposits = [];
+            depsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.status === 'approved' || data.status === 'pending') {
+                    _currentUserDeposits.push(data);
+                }
+            });
+
+            const totalAdmissionPaid = _currentUserDeposits
+                .filter(d => d.type === 'Admission Fee')
+                .reduce((sum, d) => sum + (d.amount || 0), 0);
+            
+            const admSection = document.getElementById('admFeeSection');
+            if (admSection) {
+                if (totalAdmissionPaid >= REQUIRED_ADMISSION_FEE) {
+                    admSection.style.display = 'none';
+                    document.getElementById('admAmount').value = ''; // clear value
+                } else {
+                    admSection.style.display = 'block';
+                    // Optional: You could pre-fill the remaining amount, 
+                    // but the user asked for the option to stay, so we'll just show it.
+                }
+            }
+            window.applyDisabledStatusToDropdowns();
+            window.calculateDepositTotal();
+        } catch(e) {
+            console.error("Checking deposits:", e);
+        }
+    }
+};
 window.closeDepositModal = () => depositModal.style.display = 'none';
 
 // Cache receipts by deposit doc ID to avoid passing huge base64 strings in onclick
@@ -714,8 +1149,15 @@ if (depositForm) {
     depositForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button[type="submit"]');
+        
+        const totalAmount = parseFloat(document.getElementById('depAmount').value) || 0;
+        if (totalAmount <= 0) {
+            alert("Please select at least one item or enter an amount.");
+            return;
+        }
+
         btn.disabled = true;
-        btn.innerText = 'Submitting...';
+        btn.innerText = 'Submitting Batch...';
 
         try {
             const receiptFile = document.getElementById('depReceipt').files[0];
@@ -725,26 +1167,79 @@ if (depositForm) {
                 receiptBase64 = await compressAndConvertToBase64(receiptFile);
             }
 
-            const depositData = {
-                uid: currentUser.uid,
-                userName: currentUser.displayName || currentUser.email,
-                userEmail: currentUser.email,
-                date: document.getElementById('depDate').value,
-                month: document.getElementById('depMonth').value,
-                year: document.getElementById('depYear').value,
-                type: document.getElementById('depType').value,
-                amount: parseFloat(document.getElementById('depAmount').value),
-                reference: document.getElementById('depRef').value,
-                receipt: receiptBase64,
-                status: 'pending',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
+            const userSnap = await db.collection('users').doc(currentUser.uid).get();
+            const realName = userSnap.exists ? (userSnap.data().name || currentUser.email) : (currentUser.displayName || currentUser.email);
 
-            await db.collection('deposits').add(depositData);
-            alert("Deposit submitted! Waiting for manager approval.");
+            const batchId = `batch_${Date.now()}`;
+            const date = document.getElementById('depDate').value;
+            const reference = document.getElementById('depRef').value;
+            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+
+            const batchDocs = [];
+
+            // 1. Admission Fee
+            const admSection = document.getElementById('admFeeSection');
+            if (!admSection || admSection.style.display !== 'none') {
+                const admAmount = parseFloat(document.getElementById('admAmount').value) || 0;
+                if (admAmount > 0) {
+                    batchDocs.push({ type: 'Admission Fee', amount: admAmount, month: 'N/A', year: 'N/A' });
+                }
+            }
+
+            // 2. Monthly
+            const monthlyRate = parseFloat(document.getElementById('monthlyRate').value) || 0;
+            document.querySelectorAll('.month-check:checked').forEach(c => {
+                const parts = c.value.split(' ');
+                const month = parts[0];
+                const year = parts[1];
+                batchDocs.push({ type: 'Monthly Deposit', amount: monthlyRate, month: month, year: year });
+            });
+
+            // 3. Extra
+            const extraRate = parseFloat(document.getElementById('extraRate').value) || 0;
+            document.querySelectorAll('.extra-check:checked').forEach(c => {
+                const parts = c.value.split(' ');
+                const month = parts[0];
+                const year = parts[1];
+                batchDocs.push({ type: 'Extra Deposit', amount: extraRate, month: month, year: year });
+            });
+
+            // 4. Other
+            const otherAmount = parseFloat(document.getElementById('otherAmount').value) || 0;
+            if (otherAmount > 0) {
+                batchDocs.push({ 
+                    type: 'Other', 
+                    amount: otherAmount, 
+                    month: 'N/A', 
+                    year: 'N/A',
+                    description: document.getElementById('otherNote').value || 'Other Deposit'
+                });
+            }
+
+            // Write to Firestore
+            const writePromises = batchDocs.map(item => {
+                return db.collection('deposits').add({
+                    ...item,
+                    uid: currentUser.uid,
+                    userName: realName,
+                    userEmail: currentUser.email,
+                    batchId: batchId,
+                    date: date,
+                    reference: reference,
+                    receipt: receiptBase64,
+                    status: 'pending',
+                    timestamp: timestamp
+                });
+            });
+
+            await Promise.all(writePromises);
+
+            alert(`Successfully submitted ${batchDocs.length} items in one batch! Waiting for manager approval.`);
             closeDepositModal();
             depositForm.reset();
+            window.calculateDepositTotal(); // Reset display
         } catch (error) {
+            console.error("Batch Submission Error:", error);
             alert("Error: " + error.message);
         } finally {
             btn.disabled = false;
@@ -758,27 +1253,87 @@ if (depositForm) {
 function loadPendingDeposits() {
     db.collection('deposits').where('status', '==', 'pending').onSnapshot((snapshot) => {
         const list = document.getElementById('pendingDeposits');
+        if (!list) return;
+
         if (snapshot.empty) {
             list.innerHTML = '<p style="color: var(--text-muted);">No pending deposits.</p>';
             return;
         }
 
-        list.innerHTML = snapshot.docs.map(doc => {
+        // Group by batchId
+        const batches = {};
+        snapshot.forEach(doc => {
             const d = doc.data();
+            const bid = d.batchId || doc.id; // Fallback to doc.id if no batchId (legacy)
+            if (!batches[bid]) {
+                batches[bid] = {
+                    id: bid,
+                    uid: d.uid,
+                    userName: d.userName,
+                    userEmail: d.userEmail,
+                    date: d.date,
+                    timestamp: d.timestamp,
+                    receipt: d.receipt,
+                    reference: d.reference,
+                    items: [],
+                    totalAmount: 0
+                };
+            }
+            batches[bid].items.push({ id: doc.id, ...d });
+            batches[bid].totalAmount += (d.amount || 0);
+        });
+
+        list.innerHTML = Object.values(batches).sort((a,b) => {
+            const timeA = a.timestamp?.seconds || 0;
+            const timeB = b.timestamp?.seconds || 0;
+            return timeB - timeA;
+        }).map(batch => {
+            const dateStr = batch.date || (batch.timestamp ? new Date(batch.timestamp.seconds * 1000).toLocaleDateString() : 'N/A');
+            const displayName = userNamesMap[batch.uid] || batch.userName || batch.userEmail;
+            
+            const itemsHtml = batch.items.map(it => {
+                const desc = it.type === 'Other' ? (it.description || 'Other') : (it.month === 'N/A' ? '' : `${it.month} ${it.year}`);
+                return `<li style="font-size: 0.8rem; color: var(--text-main); margin-bottom: 3px; list-style-type: none;">
+                    <i class="fa-solid fa-caret-right" style="font-size: 0.7rem; color: var(--primary-color); margin-right: 5px;"></i>
+                    ${it.type}: <strong>Tk ${formatNumber(it.amount).replace('Tk ', '')}</strong> ${desc ? `<span style="color: var(--text-muted); font-size: 0.75rem;">(${desc})</span>` : ''}
+                </li>`;
+            }).join('');
+
             return `
-                <div class="glass-card" style="padding: 15px; margin-bottom: 10px; border-radius: 12px; background: rgba(0,0,0,0.2);">
-                    <p><strong>${d.userName}</strong> requested <span style="color:var(--primary-color);">Tk${d.amount}</span></p>
-                    <p style="font-size: 0.75rem; margin-top: 5px;">Type: ${d.type || 'N/A'} | Ref: ${d.reference || 'N/A'} | ${d.month} ${d.year}</p>
-                    ${d.receipt ? `
-                        <div style="margin-top: 10px;">
-                            <button onclick="viewReceipt('${doc.id}')" class="btn btn-link" style="font-size: 0.75rem; padding: 0; color: #fbbf24; text-decoration: underline;">
-                                <i class="fa-solid fa-image"></i> View Receipt
-                            </button>
+                <div class="glass-card" style="padding: 15px; margin-bottom: 20px; border-radius: 15px; background: rgba(0,0,0,0.1); border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items:flex-start; margin-bottom: 10px;">
+                        <div>
+                            <strong style="font-size: 0.95rem; color: var(--primary-color);">${displayName}</strong>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">${batch.userEmail}</div>
+                        </div>
+                        <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700;">${dateStr}</span>
+                    </div>
+                    
+                    <ul style="margin: 0 0 12px 0; padding: 0;">
+                        ${itemsHtml}
+                    </ul>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: var(--bg-light); padding: 8px 12px; border-radius: 10px;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">TOTAL</span>
+                        <span style="font-size: 1rem; font-weight: 800; color: var(--primary-color);">Tk ${formatNumber(batch.totalAmount).replace('Tk ', '')}</span>
+                    </div>
+
+                    ${batch.receipt || batch.reference ? `
+                        <div style="margin-bottom: 12px; font-size: 0.75rem; color: var(--text-muted);">
+                           ${batch.reference ? `<div>Ref: ${batch.reference}</div>` : ''}
+                           ${batch.receipt ? `
+                                <button onclick="viewReceipt('${batch.items[0].id}')" class="btn btn-link" style="font-size: 0.8rem; padding: 0; color: #8b5cf6; font-weight: 700; margin-top: 5px;">
+                                    <i class="fa-solid fa-image"></i> View Receipt
+                                </button>
+                           ` : ''}
                         </div>
                     ` : ''}
-                    <div style="margin-top: 10px; display: flex; gap: 10px;">
-                        <button onclick="approveDeposit('${doc.id}', '${d.uid}', ${d.amount})" class="btn btn-primary" style="padding: 5px 15px; font-size: 0.8rem;">Approve</button>
-                        <button onclick="rejectDeposit('${doc.id}')" class="btn btn-link" style="color: var(--error);">Reject</button>
+
+                    <div style="display: flex; gap: 10px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 12px;">
+                        <button onclick="approveBatch('${batch.id}', '${batch.uid}', ${batch.totalAmount})" class="btn btn-primary" style="padding: 6px 15px; font-size: 0.85rem; border-radius: 8px; flex: 1;">
+                            <i class="fa-solid fa-check"></i> Approve
+                        </button>
+                        <button onclick="rejectBatch('${batch.id}')" class="btn btn-link" style="color: var(--error); font-weight: 600; padding: 0 5px; font-size: 0.85rem;">Reject</button>
                     </div>
                 </div>
             `;
@@ -786,52 +1341,115 @@ function loadPendingDeposits() {
     });
 }
 
-window.approveDeposit = async (id, uid, amount) => {
-    if (!confirm("Are you sure you want to approve this deposit?")) return;
+window.approveBatch = async (batchId, uid, totalAmount) => {
+    if (!confirm(`Are you sure you want to approve this batch payment of Tk ${formatNumber(totalAmount).replace('Tk ', '')}?`)) return;
     try {
         const userRef = db.collection('users').doc(uid);
+        
+        // Find all pending docs in this batch to process them all
+        let snapshot;
+        if (batchId.startsWith('batch_')) {
+            snapshot = await db.collection('deposits').where('batchId', '==', batchId).where('status', '==', 'pending').get();
+        } else {
+            // Legacy individual approval
+            const doc = await db.collection('deposits').doc(batchId).get();
+            if (doc.exists && doc.data().status === 'pending') {
+                snapshot = { docs: [doc] };
+            }
+        }
+
+        if (!snapshot || snapshot.empty) throw new Error("Batch not found or already processed.");
+
         await db.runTransaction(async (transaction) => {
             const userDoc = await transaction.get(userRef);
             let currentBalance = userDoc.exists ? (userDoc.data().balance || 0) : 0;
             let currentSavings = userDoc.exists ? (userDoc.data().savings || 0) : 0;
+            
             transaction.update(userRef, {
-                balance: currentBalance + amount,
-                savings: currentSavings + amount
+                balance: currentBalance + totalAmount,
+                savings: currentSavings + totalAmount
             });
-            transaction.update(db.collection('deposits').doc(id), { status: 'approved' });
+
+            snapshot.forEach(doc => {
+                transaction.update(doc.ref, { status: 'approved' });
+            });
         });
-        alert("Deposit approved!");
+
+        alert("Batch approved successfully!");
     } catch (error) {
+        console.error("Batch Approval Error:", error);
         alert("Approval failed: " + error.message);
     }
 };
 
-window.rejectDeposit = async (id) => {
-    if (confirm("Reject?")) await db.collection('deposits').doc(id).update({ status: 'rejected' });
+window.rejectBatch = async (batchId) => {
+    if (!confirm("Are you sure you want to reject this entire batch?")) return;
+    try {
+        let snapshot;
+        if (batchId.startsWith('batch_')) {
+            snapshot = await db.collection('deposits').where('batchId', '==', batchId).get();
+        } else {
+            const doc = await db.collection('deposits').doc(batchId).get();
+            if (doc.exists) snapshot = { docs: [doc] };
+        }
+
+        if (snapshot && !snapshot.empty) {
+            const promises = snapshot.docs.map(doc => doc.ref.update({ status: 'rejected' }));
+            await Promise.all(promises);
+            alert("Batch rejected.");
+        }
+    } catch (e) {
+        alert("Rejection failed: " + e.message);
+    }
 };
+
+// Note: rejectBatch handles grouped rejections, but keeping original for safety if needed
+window.rejectDeposit = window.rejectBatch;
 
 // --- OWNER & AUDIT MANAGEMENT ---
 
+// Global Caches for Performance
+let _approvedDepositsCache = {};
+let _globalSavingsSum = 0;
+
+// Initialize deposit listener once
+db.collection('deposits').where('status', '==', 'approved').onSnapshot(snapshot => {
+    _approvedDepositsCache = {};
+    snapshot.forEach(doc => {
+        const d = doc.data();
+        const uid = d.uid;
+        if (!_approvedDepositsCache[uid]) {
+            _approvedDepositsCache[uid] = { monthlyMonths: [], admissionTotal: 0, extraTerms: [] };
+        }
+        if (d.type === 'Monthly Deposit') _approvedDepositsCache[uid].monthlyMonths.push(`${d.month} ${d.year}`);
+        else if (d.type === 'Admission Fee') _approvedDepositsCache[uid].admissionTotal += (d.amount || 0);
+        else if (d.type === 'Extra Deposit') _approvedDepositsCache[uid].extraTerms.push(`${d.month} ${d.year}`);
+    });
+});
+
 function loadAllUsers() {
+    // 1. Listen to user changes
     db.collection('users').onSnapshot(async (snapshot) => {
         const list = document.getElementById('allUsersList');
         const countEl = document.getElementById('totalMembersCount');
         if (countEl) countEl.innerText = snapshot.size;
 
-        if (snapshot.empty) { list.innerHTML = 'No users.'; return; }
-
-        const depositsSnapshot = await db.collection('deposits').where('status', '==', 'approved').get();
-        const depositsByEmail = {};
-        depositsSnapshot.forEach(doc => {
-            const d = doc.data();
-            if (!depositsByEmail[d.userEmail]) depositsByEmail[d.userEmail] = 0;
-            depositsByEmail[d.userEmail]++;
+        // Populate global user name cache & calculate global savings
+        let currentLoopSavings = 0;
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            userNamesMap[doc.id] = data.name || data.email;
+            currentLoopSavings += (data.savings || 0);
         });
+        _globalSavingsSum = currentLoopSavings;
 
-        // Role Priority for sorting
+        if (snapshot.empty) { 
+            if (list) list.innerHTML = 'No users.'; 
+            return; 
+        }
+
+        const userStats = _approvedDepositsCache;
         const roleOrder = { 'owner': 0, 'manager': 1, 'admin': 2, 'member': 3 };
-
-        // Convert to array for sorting
         const userDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         userDocs.sort((a, b) => {
@@ -840,45 +1458,67 @@ function loadAllUsers() {
             return (roleOrder[roleA] ?? 10) - (roleOrder[roleB] ?? 10);
         });
 
+        const today = new Date();
+        const currentMonthIdx = today.getMonth();
+        const currentYear = today.getFullYear();
+
+        if (!list) return;
         list.innerHTML = '';
+        
         userDocs.forEach(u => {
-            const email = u.email;
+            const stats = userStats[u.id] || { monthlyMonths: [], admissionTotal: 0, extraTerms: [] };
             const joinDate = u.createdAt ? new Date(u.createdAt.seconds * 1000) : new Date();
 
-            // Dues logic: Simple months since joined check
-            const today = new Date();
+            // Dues Logic
             const joinYear = joinDate.getFullYear();
             const joinMonth = joinDate.getMonth();
-            const currentYear = today.getFullYear();
-            const currentMonth = today.getMonth();
+            const totalMonthsSinceJoin = (currentYear - joinYear) * 12 + (currentMonthIdx - joinMonth) + 1;
+            const monthlyDueCount = Math.max(0, totalMonthsSinceJoin - stats.monthlyMonths.length);
+            const hasMonthlyDue = monthlyDueCount > 0;
+            const hasAdmissionDue = stats.admissionTotal < REQUIRED_ADMISSION_FEE;
 
-            const totalMonthsJoined = (currentYear - joinYear) * 12 + (currentMonth - joinMonth) + 1;
-            const depositsCount = depositsByEmail[email] || 0;
-            const monthsDue = Math.max(0, totalMonthsJoined - depositsCount);
-            const hasDues = monthsDue > 0;
+            let hasExtraDueIndicator = false;
+            if (currentMonthIdx >= 5) { // June or later
+                const term1Found = stats.extraTerms.some(t => t.includes('January-June') && t.includes(currentYear.toString()));
+                if (!term1Found) hasExtraDueIndicator = true;
+            }
+            if (currentMonthIdx >= 11) { // December
+                const term2Found = stats.extraTerms.some(t => t.includes('July-December') && t.includes(currentYear.toString()));
+                if (!term2Found) hasExtraDueIndicator = true;
+            }
 
-            // Visibility Logic: Hide dues indicator if current user is a regular member and this is NOT their own record
-            const isRegularMember = userRole === 'member';
-            const isOwnerEmail = email === 'growhalal0@gmail.com';
             const loggedInEmail = (auth.currentUser && auth.currentUser.email) ? auth.currentUser.email.toLowerCase().trim() : '';
-            const thisUserEmail = email ? email.toLowerCase().trim() : '';
+            const thisUserEmail = u.email ? u.email.toLowerCase().trim() : '';
             const isSelf = loggedInEmail === thisUserEmail;
+            
+            // SECURITY: Only Owners, Admins, and Managers can see dues indicators for others.
+            // Regular members can only see their own dues.
+            const canSeeDues = isSelf || ['owner', 'admin', 'manager'].includes(userRole);
 
-            const showDueIndicator = !isRegularMember || isSelf;
+            let indicatorsHTML = '';
+            if (canSeeDues) {
+                if (hasMonthlyDue) indicatorsHTML += '<span class="due-indicator due-monthly" title="Monthly Deposit Due"></span>';
+                if (hasAdmissionDue) indicatorsHTML += '<span class="due-indicator due-admission" title="Admission Fee Due"></span>';
+                if (hasExtraDueIndicator) indicatorsHTML += '<span class="due-indicator due-extra" title="Extra Deposit Due"></span>';
+                if (!indicatorsHTML) indicatorsHTML = '<span style="width:10px; height:10px; border-radius:50%; background:#e2ede8; display:inline-block;"></span>';
+            } else {
+                indicatorsHTML = '<span style="width:10px; height:10px; border-radius:50%; background:#e2ede8; display:inline-block;"></span>';
+            }
 
             const row = document.createElement('div');
             row.className = 'member-row';
             row.style.padding = '12px 20px';
-            row.onclick = () => openMemberProfile(u.id, u, monthsDue, joinDate);
+            row.onclick = () => openMemberProfile(u.id, u, monthlyDueCount, joinDate);
             row.innerHTML = `
-                <div class="member-info" style="display: flex; align-items: center; gap: 12px; min-width: 0;">
-                    ${(hasDues && showDueIndicator) ? '<span class="due-indicator pulse" title="Payment Due"></span>' : '<span style="width:10px; height:10px; border-radius:50%; background:#e2ede8; display:inline-block;"></span>'}
+                <div class="member-info" style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <div style="display: flex; gap: 5px; align-items: center; min-width: 10px;">
+                        ${indicatorsHTML}
+                    </div>
                     <h4 style="margin:0; font-size: 1rem; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        ${u.name || 'Unknown'}
+                        ${u.name || u.email || 'Unknown'}
                     </h4>
                     <div style="display: flex; gap: 5px; flex-shrink: 0;">
                         ${u.role && u.role !== 'member' ? `<span class="role-badge ${u.role}">${u.role.toUpperCase()}</span>` : ''}
-                        ${isOwnerEmail && u.role !== 'owner' ? '<span class="role-badge owner">OWNER</span>' : ''}
                     </div>
                 </div>
             `;
@@ -931,19 +1571,44 @@ window.openMemberProfile = async (uid, data, monthsDue = 0, joinDateParam = null
                     <label class="form-label">Address</label>
                     <p style="font-weight: 700; color: var(--text-main); font-size: 1.1rem; padding-left: 5px;">${data.address || 'N/A'}</p>
                 </div>
+                <div class="profile-info-item">
+                    <label class="form-label">Profit Share (%)</label>
+                    <p style="font-weight: 700; color: var(--primary-dark); font-size: 1.1rem; padding-left: 5px;">${data.profitPercentage || 100}%</p>
+                </div>
             </div>
         </div>
 
         ${isRestricted ? '' : `
         <div class="form-section" style="background: var(--bg-light); border: 0;">
             <div class="grid-2">
-                <div class="profile-info-item">
-                    <label class="form-label">Total Savings</label>
-                    <p style="color: var(--primary-color); font-weight: 800; font-size: 1.5rem; padding-left: 5px;">${formatNumber(data.savings || 0)}</p>
+                <div class="profile-info-item" style="margin-bottom: 20px;">
+                    <label class="form-label">Total Current Savings</label>
+                    <p style="color: var(--primary-color); font-weight: 800; font-size: 1.8rem; padding-left: 5px;">${formatNumber(data.savings || 0)}</p>
                 </div>
-                <div class="profile-info-item">
-                    <label class="form-label">Overdue Months</label>
-                    <p style="color: ${monthsDue > 0 ? '#E53E3E' : '#38A169'}; font-weight: 800; font-size: 1.5rem; padding-left: 5px;">${monthsDue} Months</p>
+            <div id="detailedDuesSection" style="border-top: 1px solid rgba(0,0,0,0.05); padding-top: 15px;">
+                <p style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 12px;"><i class="fa-solid fa-triangle-exclamation"></i> Overdue Breakdown</p>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fff; border-radius: 10px; border: 1px solid var(--border-color);">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="due-indicator due-monthly"></span>
+                            <span style="font-size: 0.85rem; font-weight: 600;">Monthly Deposit</span>
+                        </div>
+                        <span id="profMonthlyDue" style="font-weight: 700; color: #EF4444;">Calculating...</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fff; border-radius: 10px; border: 1px solid var(--border-color);">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="due-indicator due-admission"></span>
+                            <span style="font-size: 0.85rem; font-weight: 600;">Admission Fee</span>
+                        </div>
+                        <span id="profAdmissionDue" style="font-weight: 700; color: #F59E0B;">Calculating...</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fff; border-radius: 10px; border: 1px solid var(--border-color);">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="due-indicator due-extra"></span>
+                            <span style="font-size: 0.85rem; font-weight: 600;">Extra Deposit</span>
+                        </div>
+                        <span id="profExtraDue" style="font-weight: 700; color: #8B5CF6;">Calculating...</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -988,6 +1653,64 @@ window.openMemberProfile = async (uid, data, monthsDue = 0, joinDateParam = null
         `}
     `;
 
+    // Async Due Calculation for Profile
+    if (!isRestricted) {
+        (async () => {
+            try {
+                const depsSnap = await db.collection('deposits').where('uid', '==', uid).where('status', '==', 'approved').get();
+                let adminTotal = 0;
+                let monthlyFound = [];
+                let extraFound = [];
+                depsSnap.forEach(d => {
+                    const doc = d.data();
+                    if (doc.type === 'Admission Fee') adminTotal += (doc.amount || 0);
+                    else if (doc.type === 'Monthly Deposit') monthlyFound.push(`${doc.month} ${doc.year}`);
+                    else if (doc.type === 'Extra Deposit') extraFound.push(`${doc.month} ${doc.year}`);
+                });
+
+                const today = new Date();
+                const currYear = today.getFullYear();
+                const currMonIdx = today.getMonth();
+
+                // 1. Admission Due
+                const admDue = Math.max(0, REQUIRED_ADMISSION_FEE - adminTotal);
+                const profAdmEl = document.getElementById('profAdmissionDue');
+                if (profAdmEl) {
+                    profAdmEl.innerText = admDue > 0 ? `Tk ${formatNumber(admDue).replace('Tk ', '')} Due` : 'Paid';
+                    profAdmEl.style.color = admDue > 0 ? '#F59E0B' : 'var(--success)';
+                }
+
+                // 2. Monthly Due
+                const jYear = jDate.getFullYear();
+                const jMon = jDate.getMonth();
+                const totalMonthsExpected = (currYear - jYear) * 12 + (currMonIdx - jMon) + 1;
+                const mDue = Math.max(0, totalMonthsExpected - monthlyFound.length);
+                const profMonEl = document.getElementById('profMonthlyDue');
+                if (profMonEl) {
+                    profMonEl.innerText = mDue > 0 ? `${mDue} Months Due` : 'Paid';
+                    profMonEl.style.color = mDue > 0 ? '#EF4444' : 'var(--success)';
+                }
+
+                // 3. Extra Due
+                let extraDueList = [];
+                if (currMonIdx >= 5) { // June or later
+                    const t1Expected = `January-June ${currYear}`;
+                    if (!extraFound.includes(t1Expected)) extraDueList.push('Term 1 (Jan-Jun)');
+                }
+                if (currMonIdx >= 11) { // December
+                    const t2Expected = `July-December ${currYear}`;
+                    if (!extraFound.includes(t2Expected)) extraDueList.push('Term 2 (Jul-Dec)');
+                }
+                const profExtraEl = document.getElementById('profExtraDue');
+                if (profExtraEl) {
+                    profExtraEl.innerText = extraDueList.length > 0 ? extraDueList.join(', ') + ' Due' : 'Paid';
+                    profExtraEl.style.color = extraDueList.length > 0 ? '#8B5CF6' : 'var(--success)';
+                }
+            } catch (err) { console.error("Profile Dues Error:", err); }
+        })();
+    }
+
+
     // Standardized Button Container
     const btnContainer = document.getElementById('profileModalActions');
     if (btnContainer) {
@@ -1024,6 +1747,17 @@ window.openMemberProfile = async (uid, data, monthsDue = 0, joinDateParam = null
             editBtn.innerHTML = '<i class="fa-solid fa-user-pen"></i> Edit Profile';
             editBtn.onclick = () => openEditProfile(uid);
             btnContainer.appendChild(editBtn);
+        }
+
+        // Add Delete Button (Owner Only)
+        if (isOwnerUser && memberRoleOnProfile !== 'owner' && !isSelf) {
+            const delBtn = document.createElement('button');
+            delBtn.className = 'btn-profile-action';
+            delBtn.style.background = 'var(--error)';
+            delBtn.style.color = 'white';
+            delBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete Member';
+            delBtn.onclick = () => initiateMemberDeletion(uid, data.savings || 0, data.profitPercentage || 100);
+            btnContainer.appendChild(delBtn);
         }
     }
 };
@@ -1075,6 +1809,7 @@ window.openEditProfile = async (uid) => {
     document.getElementById('editNomRelation').value = data.nominee?.relation || '';
     document.getElementById('editNomPhone').value = data.nominee?.phone || '';
     document.getElementById('editNomAddress').value = data.nominee?.address || '';
+    document.getElementById('editMemProfitPct').value = data.profitPercentage || 100;
 
     document.getElementById('editProfileModal').style.display = 'flex';
 };
@@ -1102,6 +1837,9 @@ if (editProfileForm) {
         if (name) updatedData.name = name;
         if (phone) updatedData.phone = phone;
         if (address) updatedData.address = address;
+
+        const profitPct = document.getElementById('editMemProfitPct').value;
+        if (profitPct !== "") updatedData.profitPercentage = parseFloat(profitPct);
 
         // Nominee partial
         const nomName = document.getElementById('editNomName').value.trim();
@@ -1158,6 +1896,166 @@ if (editProfileForm) {
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Save Profile Changes';
+        }
+    });
+}
+
+// --- MEMBER DELETION & COMPANY ACCOUNT LOGIC ---
+
+window.initiateMemberDeletion = async (uid, totalSavings, profitPercentage = 100) => {
+    document.getElementById('delMemberUid').value = uid;
+    document.getElementById('delMemberTotalSavings').value = totalSavings;
+    document.getElementById('delSavingsDisplay').innerText = formatNumber(totalSavings);
+
+    // Calculate estimated profit map
+    try {
+        const statsDoc = await db.collection('system').doc('stats').get();
+        const globalProfit = statsDoc.exists ? (statsDoc.data().totalProfit || 0) : 0;
+
+        // Sum up global active savings to find ratio
+        const allUsersSnap = await db.collection('users').get();
+        let globalSavings = 0;
+        allUsersSnap.forEach(doc => { globalSavings += (doc.data().savings || 0); });
+
+        let estimatedProfit = 0;
+        if (globalSavings > 0) {
+            estimatedProfit = ((totalSavings / globalSavings) * globalProfit) * (profitPercentage / 100);
+        }
+
+        document.getElementById('delMemberTotalProfit').value = estimatedProfit;
+        document.getElementById('delProfitDisplay').innerText = formatNumber(estimatedProfit);
+
+        document.getElementById('delDeductionPct').value = 10; // Default 10%
+
+        document.getElementById('deleteMemberModal').style.display = 'flex';
+        calculateDeletionPayout();
+
+    } catch (e) {
+        alert("Error prepping deletion: " + e.message);
+    }
+};
+
+window.calculateDeletionPayout = () => {
+    const savings = parseFloat(document.getElementById('delMemberTotalSavings').value) || 0;
+    const profit = parseFloat(document.getElementById('delMemberTotalProfit').value) || 0;
+    const pct = parseFloat(document.getElementById('delDeductionPct').value) || 0;
+
+    const deduction = (profit * (pct / 100));
+    const payout = (savings + profit) - deduction;
+
+    document.getElementById('delDeductionAmount').innerText = formatNumber(deduction);
+    document.getElementById('delFinalPayout').innerText = formatNumber(payout);
+};
+
+window.closeDeleteMemberModal = () => {
+    document.getElementById('deleteMemberModal').style.display = 'none';
+};
+
+const deleteMemberForm = document.getElementById('deleteMemberForm');
+if (deleteMemberForm) {
+    deleteMemberForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const uid = document.getElementById('delMemberUid').value;
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Processing...';
+
+        try {
+            // 1. Pre-calculate global savings outside transaction (queries unsupported in client-side transactions)
+            const allUsersSnap = await db.collection('users').get();
+            let currentGlobalSavings = 0;
+            allUsersSnap.forEach(doc => { currentGlobalSavings += (doc.data().savings || 0); });
+
+            await db.runTransaction(async (transaction) => {
+            const userRef = db.collection('users').doc(uid);
+            const userDoc = await transaction.get(userRef);
+
+            if (!userDoc.exists) throw new Error("User does not exist.");
+            const userData = userDoc.data();
+
+            // 2. Fetch system stats inside transaction for consistency
+            const statsRef = db.collection('system').doc('stats');
+            const statsDoc = await transaction.get(statsRef);
+            const globalProfit = statsDoc.exists ? (statsDoc.data().totalProfit || 0) : 0;
+
+            const savings = userData.savings || 0;
+            const profitPercentage = userData.profitPercentage || 100;
+            let totalPotentialProfit = 0;
+            if (currentGlobalSavings > 0) {
+                totalPotentialProfit = (savings / currentGlobalSavings) * globalProfit;
+            }
+                const profitShare = totalPotentialProfit * (profitPercentage / 100);
+                const companyDivertedProfit = totalPotentialProfit - profitShare;
+
+                const pct = parseFloat(document.getElementById('delDeductionPct').value) || 0;
+                const deduction = (profitShare * (pct / 100));
+                const payout = (savings + profitShare) - deduction;
+
+                // 1. Create Archive Record
+                const archiveRef = db.collection('archivedMembers').doc(uid);
+                const archiveData = {
+                    ...userData,
+                    deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    finalSavings: savings,
+                    finalProfitShare: profitShare,
+                    deductionPercentage: pct,
+                    profitDeducted: deduction,
+                    finalPayout: payout
+                };
+                transaction.set(archiveRef, archiveData);
+
+                // 2. Create Company Account Record for Deduction & Profit Diversion
+                if (deduction > 0) {
+                    const companyAccRef = db.collection('companyAccount').doc();
+                    transaction.set(companyAccRef, {
+                        type: 'Deletion Deduction',
+                        amount: deduction,
+                        sourceUser: userData.name || userData.email,
+                        sourceUid: uid,
+                        date: new Date().toISOString().split('T')[0],
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        description: `Deducted ${pct}% from profit share during account closure.`
+                    });
+                }
+                if (companyDivertedProfit > 0) {
+                    const diversionRef = db.collection('companyAccount').doc();
+                    transaction.set(diversionRef, {
+                        type: 'Profit Share Diversion',
+                        amount: companyDivertedProfit,
+                        sourceUser: userData.name || userData.email,
+                        sourceUid: uid,
+                        date: new Date().toISOString().split('T')[0],
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        description: `Company retained ${100 - profitPercentage}% share from ${userData.name}'s membership share.`
+                    });
+                }
+
+                // 3. Update Global Profit Pool (Remove the settled slice)
+                if (totalPotentialProfit > 0) {
+                    const currentGlobalProfit = statsDoc.exists ? (statsDoc.data().totalProfit || 0) : 0;
+                    transaction.update(statsRef, {
+                        totalProfit: Math.max(0, currentGlobalProfit - totalPotentialProfit)
+                    });
+                }
+
+                // 4. Delete the User Document
+                transaction.delete(userRef);
+
+                // We do NOT delete their deposits or investments, they remain for historical integrity. 
+            });
+
+            alert("Member permanently deleted and data archived successfully.");
+            closeDeleteMemberModal();
+            closeMemberProfile();
+            // loadAllUsers() will automatically re-render because of the snapshot listener
+
+        } catch (error) {
+            console.error("Deletion Error: ", error);
+            alert("Error: " + error.message);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Confirm Deletion';
         }
     });
 }
@@ -1385,6 +2283,10 @@ if (investForm) {
         const medium = document.getElementById('invMedium').value;
         const amount = parseFloat(document.getElementById('invAmount').value);
 
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerText = 'Creating Project...';
+
         try {
             await db.collection('investments').add({
                 date,
@@ -1398,6 +2300,9 @@ if (investForm) {
             investForm.reset();
         } catch (error) {
             alert("Error adding investment: " + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Add Investment';
         }
     });
 }
@@ -1625,25 +2530,30 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
     const contentEl = document.getElementById('reportPreviewContent');
     const downloadBtn = document.getElementById('downloadBtn');
     const modal = document.getElementById('reportPreviewModal');
+    const t = translations[currentLang] || translations['en'];
 
     modal.style.display = 'flex';
-    contentEl.innerHTML = '<div style="text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading statement...</div>';
+    contentEl.innerHTML = `<div style="text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'লোড হচ্ছে...' : 'Loading statement...'}</div>`;
 
     try {
-        titleEl.innerText = "Member Statement";
+        titleEl.innerText = t['report-member-statement'] || "Member Statement";
 
         // Fetch system stats for profit calculation
         const statsSnap = await db.collection('system').doc('stats').get();
         const totalProfit = statsSnap.exists ? (statsSnap.data().totalProfit || 0) : 0;
 
-        const users = await db.collection('users').get();
-        let totalSavings = 0;
-        users.forEach(u => totalSavings += (u.data().savings || 0));
+        // Use cached global savings if available, otherwise fetch
+        let totalSavings = _globalSavingsSum;
+        if (totalSavings === 0) {
+            const users = await db.collection('users').get();
+            users.forEach(u => totalSavings += (u.data().savings || 0));
+        }
 
         const userSavings = data.savings || 0;
+        const profitPercentage = data.profitPercentage || 100;
         let profitShare = 0;
         if (totalSavings > 0) {
-            profitShare = (userSavings / totalSavings) * totalProfit;
+            profitShare = (userSavings / totalSavings) * totalProfit * (profitPercentage / 100);
         }
 
         // Fetch deposits (Sorted in memory to avoid index requirement)
@@ -1654,24 +2564,57 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
             return timeB - timeA;
         });
 
+        // Dues Calculation for Statement
+        let adminTotal = 0;
+        let monthlyFound = [];
+        let extraFound = [];
+        depsSnap.forEach(d => {
+            const doc = d.data();
+            if (doc.type === 'Admission Fee') adminTotal += (doc.amount || 0);
+            else if (doc.type === 'Monthly Deposit') monthlyFound.push(`${doc.month} ${doc.year}`);
+            else if (doc.type === 'Extra Deposit') extraFound.push(`${doc.month} ${doc.year}`);
+        });
+
+        const today = new Date();
+        const currYear = today.getFullYear();
+        const currMonIdx = today.getMonth();
+        const jYear = joinDate.getFullYear();
+        const jMon = joinDate.getMonth();
+        const totalMonthsExpected = (currYear - jYear) * 12 + (currMonIdx - jMon) + 1;
+        const mDue = Math.max(0, totalMonthsExpected - monthlyFound.length);
+        const admDue = Math.max(0, REQUIRED_ADMISSION_FEE - adminTotal);
+
+        let extraDueList = [];
+        if (currMonIdx >= 5) { // June or later
+            const t1Expected = `January-June ${currYear}`;
+            if (!extraFound.includes(t1Expected)) extraDueList.push('Term 1 (Jan-Jun)');
+        }
+        if (currMonIdx >= 11) { // December
+            const t2Expected = `July-December ${currYear}`;
+            if (!extraFound.includes(t2Expected)) extraDueList.push('Term 2 (Jul-Dec)');
+        }
+
+        const hasAnyDue = mDue > 0 || admDue > 0 || extraDueList.length > 0;
+
+        // Generate Deposit History HTML for display
         let depositsHtml = '';
         if (depsList.length > 0) {
             depositsHtml = `
                 <div style="margin-top: 25px;">
-                    <h3 style="font-size: 1rem; color: var(--primary-color); margin-bottom: 10px; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px;">Deposit History</h3>
+                    <h3 style="font-size: 1rem; color: var(--primary-color); margin-bottom: 10px; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px;">${t['label-history'] || 'Deposit History'}</h3>
                     <div class="report-table-wrapper">
                         <table class="report-table">
                             <thead>
-                                <tr><th>Month/Year</th><th>Amount</th><th>Date</th><th>Receipt</th></tr>
+                                <tr><th>${t['label-month'] || 'Month/Year'}</th><th>${t['label-amount'] || 'Amount'}</th><th>${t['label-date'] || 'Date'}</th><th>${currentLang === 'bn' ? 'রিসিট' : 'Receipt'}</th></tr>
                             </thead>
                             <tbody>
                                 ${depsList.map(d => {
                 return `<tr>
-                    <td>${d.month} ${d.year}</td>
+                    <td>${currentLang === 'bn' ? d.month.replace('January', 'জানুয়ারি').replace('February', 'ফেব্রুয়ারি').replace('March', 'মার্চ').replace('April', 'এপ্রিল').replace('May', 'মে').replace('June', 'জুন').replace('July', 'জুলাই').replace('August', 'আগস্ট').replace('September', 'সেপ্টেম্বর').replace('October', 'অক্টোবর').replace('November', 'নভেম্বর').replace('December', 'ডিসেম্বর') : d.month} ${d.year}</td>
                     <td>Tk ${formatNumber(d.amount).replace('Tk ', '')}</td>
                     <td>${d.date}</td>
                     <td>
-                        ${d.receipt ? `<img src="${d.receipt}" class="table-image-thumb" onclick="viewReceiptInStatement('${d.receipt}')">` : '<span style="color:#ccc; font-size:0.75rem;">None</span>'}
+                        ${d.receipt ? `<img src="${d.receipt}" class="table-image-thumb" onclick="viewReceiptInStatement('${d.receipt}')">` : `<span style="color:#ccc; font-size:0.75rem;">${t['label-none'] || 'None'}</span>`}
                     </td>
                 </tr>`;
             }).join('')}
@@ -1681,20 +2624,20 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
                 </div>
             `;
         } else {
-            depositsHtml = '<p style="margin-top:20px; color:var(--text-muted); font-size: 0.9rem;">No approved deposits found.</p>';
+            depositsHtml = `<p style="margin-top:20px; color:var(--text-muted); font-size: 0.9rem;">${currentLang === 'bn' ? 'কোনো অনুমোদিত ডিপোজিট পাওয়া যায়নি।' : 'No approved deposits found.'}</p>`;
         }
 
         const html = `
-            <div style="padding: 10px; font-family: 'Inter', sans-serif;">
+            <div style="padding: 10px; font-family: 'Inter', 'SolaimanLipi', sans-serif;">
                 <!-- Header Section with Photo -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; gap: 20px;">
                     <div style="flex: 1;">
                         <h1 style="color: var(--primary-color); margin: 0; font-size: 1.8rem;">${data.name || 'Member'}</h1>
                         <p style="color: #666; font-size: 0.95rem; margin: 5px 0;">${data.email}</p>
                         <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px; margin-top: 15px; font-size: 0.9rem;">
-                            <span style="color: #888;">Phone:</span> <strong>${data.phone || 'N/A'}</strong>
-                            <span style="color: #888;">Join Date:</span> <strong>${joinDate instanceof Date ? joinDate.toLocaleDateString() : 'N/A'}</strong>
-                            <span style="color: #888;">Address:</span> <strong>${data.address || 'N/A'}</strong>
+                            <span style="color: #888;">${t['label-phone'] || 'Phone'}:</span> <strong>${data.phone || 'N/A'}</strong>
+                            <span style="color: #888;">${t['label-join-date'] || 'Join Date'}:</span> <strong>${joinDate instanceof Date ? joinDate.toLocaleDateString(currentLang === 'bn' ? 'bn-BD' : 'en-US') : 'N/A'}</strong>
+                            <span style="color: #888;">${t['label-address'] || 'Address'}:</span> <strong>${data.address || 'N/A'}</strong>
                         </div>
                     </div>
                     
@@ -1707,34 +2650,53 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
                 </div>
 
                 <!-- Financial Summary Cards -->
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
                     <div style="background: var(--primary-color); color: white; padding: 20px; border-radius: 15px; text-align: center;">
-                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin: 0;">Total Savings</p>
+                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin: 0;">${t['label-total-savings'] || 'Total Savings'}</p>
                         <p style="font-size: 1.4rem; font-weight: 800; margin: 5px 0;">${formatNumber(userSavings)}</p>
                     </div>
                     <div style="background: #10b981; color: white; padding: 20px; border-radius: 15px; text-align: center;">
-                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin: 0;">Profit Share</p>
+                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin: 0;">${t['label-profit-share'] || 'Profit Share'}</p>
                         <p style="font-size: 1.4rem; font-weight: 800; margin: 5px 0;">Tk ${formatNumber(profitShare.toFixed(2)).replace('Tk ', '')}</p>
                     </div>
-                    <div style="background: ${monthsDue > 0 ? '#ef4444' : '#f0fdf4'}; color: ${monthsDue > 0 ? 'white' : '#166534'}; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid ${monthsDue > 0 ? '#ef4444' : '#bbf7d0'};">
-                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin: 0;">Status</p>
-                        <p style="font-size: 1.1rem; font-weight: 700; margin: 5px 0;">${monthsDue > 0 ? `${monthsDue} Months Pending` : 'Regular Member'}</p>
+                    <div style="background: ${hasAnyDue ? '#ef4444' : '#f0fdf4'}; color: ${hasAnyDue ? 'white' : '#166534'}; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid ${hasAnyDue ? '#ef4444' : '#bbf7d0'};">
+                        <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin: 0;">${t['label-status'] || 'Status'}</p>
+                        <p style="font-size: 1.1rem; font-weight: 700; margin: 5px 0;">${hasAnyDue ? (t['status-dues'] || 'Dues Pending') : (t['status-regular'] || 'Regular')}</p>
+                    </div>
+                </div>
+
+                <!-- Outstanding Dues Detail Section -->
+                <div style="margin-bottom: 30px; padding: 15px; background: #fffcf2; border: 1px solid #fce7f3; border-radius: 15px;">
+                    <h3 style="font-size: 0.9rem; color: #db2777; margin: 0 0 10px 0; border-bottom: 1px solid #fdf2f8; padding-bottom: 5px;">${t['label-outstanding-breakdown'] || 'Outstanding Fees Breakdown'}</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                        <div style="padding: 10px; background: #fef2f2; border-radius: 10px; border: 1px solid #fee2e2;">
+                            <p style="font-size: 0.7rem; color: #ef4444; margin: 0; font-weight: 600;">${t['monthly-deposit'] || 'Monthly Deposit'}</p>
+                            <p style="font-weight: 700; margin: 3px 0; font-size: 0.9rem;">${mDue > 0 ? mDue + (currentLang === 'bn' ? ' মাস' : ' Months') : (t['label-paid'] || 'Paid')}</p>
+                        </div>
+                        <div style="padding: 10px; background: #fffbeb; border-radius: 10px; border: 1px solid #fef3c7;">
+                            <p style="font-size: 0.7rem; color: #f59e0b; margin: 0; font-weight: 600;">${t['admission-fee'] || 'Admission Fee'}</p>
+                            <p style="font-weight: 700; margin: 3px 0; font-size: 0.9rem;">${admDue > 0 ? 'Tk ' + formatNumber(admDue).replace('Tk ', '') : (t['label-paid'] || 'Paid')}</p>
+                        </div>
+                        <div style="padding: 10px; background: #f5f3ff; border-radius: 10px; border: 1px solid #ede9fe;">
+                            <p style="font-size: 0.7rem; color: #8b5cf6; margin: 0; font-weight: 600;">${t['extra-deposit'] || 'Extra Deposit'}</p>
+                            <p style="font-weight: 700; margin: 3px 0; font-size: 0.9rem;">${extraDueList.length > 0 ? extraDueList.join(', ') : (t['label-paid'] || 'Paid')}</p>
+                        </div>
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
                     <!-- Nominee Section -->
                     <div style="background: #fbfbfb; padding: 20px; border-radius: 15px; border: 1px solid #eee;">
-                        <h3 style="font-size: 1rem; color: var(--primary-color); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">Nominee Information</h3>
+                        <h3 style="font-size: 1rem; color: var(--primary-color); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">${t['label-nominee-info'] || 'Nominee Information'}</h3>
                         <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 15px; font-size: 0.9rem;">
-                            <span style="color: #888;">Name:</span> <strong>${data.nominee?.name || 'N/A'}</strong>
-                            <span style="color: #888;">Relation:</span> <strong>${data.nominee?.relation || 'N/A'}</strong>
-                            <span style="color: #888;">Phone:</span> <strong>${data.nominee?.phone || 'N/A'}</strong>
-                            <span style="color: #888;">Address:</span> <strong>${data.nominee?.address || 'N/A'}</strong>
+                            <span style="color: #888;">${t['label-name'] || 'Name'}:</span> <strong>${data.nominee?.name || 'N/A'}</strong>
+                            <span style="color: #888;">${t['label-relation'] || 'Relation'}:</span> <strong>${data.nominee?.relation || 'N/A'}</strong>
+                            <span style="color: #888;">${t['label-phone'] || 'Phone'}:</span> <strong>${data.nominee?.phone || 'N/A'}</strong>
+                            <span style="color: #888;">${t['label-address'] || 'Address'}:</span> <strong>${data.nominee?.address || 'N/A'}</strong>
                         </div>
                         ${data.nomineePhoto ? `
                         <div style="margin-top: 15px; text-align: center;">
-                            <p style="font-size: 0.75rem; color: #888; margin-bottom: 5px;">Nominee Photo</p>
+                            <p style="font-size: 0.75rem; color: #888; margin-bottom: 5px;">${currentLang === 'bn' ? 'নমিনীর ছবি' : 'Nominee Photo'}</p>
                             <img src="${data.nomineePhoto}" alt="Nominee" style="width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 1px solid #ddd;">
                         </div>
                         ` : ''}
@@ -1742,11 +2704,11 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
                     
                     <!-- ID Documents Preview -->
                     <div style="background: #fbfbfb; padding: 20px; border-radius: 15px; border: 1px solid #eee;">
-                        <h3 style="font-size: 1rem; color: var(--primary-color); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">ID Document (NID)</h3>
+                        <h3 style="font-size: 1rem; color: var(--primary-color); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">${t['label-nid-doc'] || 'ID Document (NID)'}</h3>
                         <div style="text-align: center;">
                             ${data.nidURL ?
                 `<img src="${data.nidURL}" alt="NID" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">` :
-                `<div style="padding: 40px; background: #eee; border-radius: 8px; color: #999;"><i class="fa-solid fa-address-card fa-4x"></i><p style="font-size: 0.8rem; margin-top: 10px;">No NID Uploaded</p></div>`
+                `<div style="padding: 40px; background: #eee; border-radius: 8px; color: #999;"><i class="fa-solid fa-address-card fa-4x"></i><p style="font-size: 0.8rem; margin-top: 10px;">${currentLang === 'bn' ? 'এনআইডি আপলোড করা হয়নি' : 'No NID Uploaded'}</p></div>`
             }
                         </div>
                     </div>
@@ -1757,13 +2719,13 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
         `;
 
         const contentHtml = `
-            <div id="statementExportArea" style="padding: 40px; background: white; width: 800px; margin: 0 auto;">
+            <div id="statementExportArea" data-theme="light" style="padding: 40px; background: white; color: #1A2D24; width: 800px; margin: 0 auto; font-family: 'Outfit', 'Inter', 'SolaimanLipi', sans-serif;">
                 <div style="text-align: center; margin-bottom: 40px; position: relative;">
-                    <div style="position: absolute; top: 0; right: 0; font-size: 0.65rem; color: #ccc;">Member UID: ${uid}</div>
+                    <div style="position: absolute; top: 0; right: 0; font-size: 0.65rem; color: #ccc;">${t['label-member-uid'] || 'Member UID'}: ${uid}</div>
                     <h1 style="color: var(--primary-color); margin: 0; text-transform: uppercase; letter-spacing: 4px; font-size: 2.5rem; font-weight: 800;">GROW HALAL</h1>
-                    <p style="margin: 5px 0; font-weight: 600; color: #444; letter-spacing: 1.5px; text-transform: uppercase; font-size: 0.8rem;">Official Member Comprehensive Report</p>
+                    <p style="margin: 5px 0; font-weight: 600; color: #444; letter-spacing: 1.5px; text-transform: uppercase; font-size: 0.8rem;">${t['label-official-report'] || 'Official Member Comprehensive Report'}</p>
                     <div style="width: 80px; height: 4px; background: var(--primary-color); margin: 15px auto;"></div>
-                    <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">Report Date: ${new Date().toLocaleString()}</div>
+                    <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">${t['label-report-date'] || 'Report Date'}: ${new Date().toLocaleString(currentLang === 'bn' ? 'bn-BD' : 'en-US')}</div>
                 </div>
                 
                 <div class="report-table-wrapper" style="border: none;">
@@ -1772,115 +2734,87 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
 
                 <div style="margin-top: 80px; padding-top: 30px; border-top: 2px solid #f0f0f0; display: flex; justify-content: space-between; align-items: flex-end;">
                     <div style="text-align: left; font-size: 0.75rem; color: #999;">
-                        <p style="margin: 2px 0;">This document is an official record of Grow Halal.</p>
-                        <p style="margin: 2px 0;">Generated by System: ${auth.currentUser.email}</p>
+                        <p style="margin: 2px 0;">${currentLang === 'bn' ? 'এই ডকুমেন্টটি গ্রো হালাল-এর একটি অফিসিয়াল রেকর্ড।' : 'This document is an official record of Grow Halal.'}</p>
+                        <p style="margin: 2px 0;">${currentLang === 'bn' ? 'প্রস্তুতকারক (সিস্টেম):' : 'Generated by System:'} ${auth.currentUser.email}</p>
                     </div>
                     <div style="text-align: right;">
                         <div style="width: 150px; border-top: 1px solid #333; margin-bottom: 5px;"></div>
-                        <p style="font-size: 0.8rem; font-weight: 700; margin: 0;">Authorized Signature</p>
-                    </div>
+                        <p style="font-size: 0.8rem; font-weight: 700; margin: 0;">${t['label-authorized-sig'] || 'Authorized Signature'}</p>
                 </div>
             </div>
         `;
         contentEl.innerHTML = contentHtml;
 
-        downloadBtn.onclick = () => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({
-                unit: 'mm',
-                format: 'a4',
-                orientation: 'portrait'
-            });
-
+        downloadBtn.onclick = async () => {
             const originalBtnText = downloadBtn.innerHTML;
             downloadBtn.disabled = true;
-            downloadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Exporting...';
+            downloadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'এক্সপোর্ট হচ্ছে...' : 'Exporting...'}`;
+
+            const element = document.getElementById('statementExportArea');
+            if (!element) return;
+
+            // 1. Reset scroll
+            const originalScroll = window.scrollY;
+            window.scrollTo(0, 0);
+
+            // 2. Create the most stable capture wrapper
+            const exportWrapper = document.createElement('div');
+            exportWrapper.id = 'temp-pdf-export-wrapper';
+            // Use off-screen positioning instead of z-index: -1 to ensure rendering
+            exportWrapper.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: -5000px;
+                width: 210mm;
+                background: white;
+                color: black;
+                padding: 10mm;
+                box-sizing: border-box;
+                font-family: 'SolaimanLipi', 'Inter', 'Outfit', sans-serif !important;
+            `;
+            
+            exportWrapper.innerHTML = `
+                <style>
+                    #temp-pdf-export-wrapper { background: white !important; }
+                    #temp-pdf-export-wrapper * { 
+                        color: black !important; 
+                        background-color: transparent !important;
+                        font-family: 'SolaimanLipi', 'Inter', 'Outfit', sans-serif !important;
+                        visibility: visible !important;
+                    }
+                    #temp-pdf-export-wrapper .report-table th { background-color: #f1f5f9 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; }
+                    #temp-pdf-export-wrapper .report-table td { border: 1px solid #e2e8f0 !important; }
+                </style>
+                <div style="background: white !important;">
+                    ${element.innerHTML}
+                </div>
+            `;
+
+            const opt = {
+                margin: 5,
+                filename: `Statement_${data.name || 'Member'}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true, 
+                    letterRendering: true,
+                    backgroundColor: '#ffffff'
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
 
             try {
-                // Header
-                doc.setTextColor(45, 90, 71);
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(24);
-                doc.text("GROW HALAL", 105, 20, { align: 'center' });
-
-                doc.setFontSize(10);
-                doc.setTextColor(80, 80, 80);
-                doc.text("OFFICIAL MEMBER COMPREHENSIVE REPORT", 105, 26, { align: 'center' });
-                doc.setDrawColor(45, 90, 71);
-                doc.setLineWidth(1);
-                doc.line(80, 28, 130, 28);
-
-                // Meta Info
-                doc.setFontSize(8);
-                doc.setTextColor(150, 150, 150);
-                doc.text(`UID: ${uid}`, 190, 15, { align: 'right' });
-                doc.text(`Report Date: ${new Date().toLocaleString()}`, 105, 34, { align: 'center' });
-
-                // Section: Personal Details
-                doc.setFontSize(12);
-                doc.setTextColor(45, 90, 71);
-                doc.text("Member Information", 15, 45);
-                doc.setDrawColor(230, 230, 230);
-                doc.line(15, 47, 195, 47);
-
-                doc.setFontSize(9);
-                doc.setTextColor(50, 50, 50);
-                doc.setFont("helvetica", "bold");
-                doc.text("Full Name:", 15, 55);
-                doc.text("Phone:", 15, 62);
-                doc.text("Email:", 15, 69);
-                doc.text("Address:", 15, 76);
-
-                doc.setFont("helvetica", "normal");
-                doc.text(data.name || 'N/A', 40, 55);
-                doc.text(data.phone || 'N/A', 40, 62);
-                doc.text(data.email || 'N/A', 40, 69);
-                doc.text(data.address || 'N/A', 40, 76);
-
-                doc.setFont("helvetica", "bold");
-                doc.text("Total Savings:", 110, 55);
-                doc.text("Monthly Due:", 110, 62);
-                doc.text("Profit Share:", 110, 69);
-                doc.text("Status:", 110, 76);
-
-                doc.setFont("helvetica", "normal");
-                doc.text(`Tk ${formatNumber(userSavings)}`, 140, 55);
-                doc.text(`Tk ${formatNumber(data.monthlyTarget || 1000)}`, 140, 62);
-                doc.text(`Tk ${formatNumber(profitShare.toFixed(2))}`, 140, 69);
-                doc.text(`${monthsDue > 0 ? 'Pending' : 'Active'}`, 140, 76);
-
-                // Section: Deposit History (Table)
-                const tableEl = contentEl.querySelector('table');
-                if (tableEl) {
-                    doc.autoTable({
-                        html: tableEl,
-                        startY: 85,
-                        theme: 'striped',
-                        headStyles: { fillColor: [45, 90, 71], textColor: [255, 255, 255], fontSize: 10 },
-                        styles: { fontSize: 8, cellPadding: 2.5 },
-                        margin: { left: 15, right: 15 }
-                    });
-                }
-
-                // Footer
-                const finalY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 120) + 20;
-                doc.setFontSize(8);
-                doc.setTextColor(150, 150, 150);
-                doc.text(`Operator: Habibullah Foridi`, 15, finalY);
-                doc.text(`Security Code: GH-MBR-${Date.now().toString(36).toUpperCase()}`, 15, finalY + 4);
-
-                doc.setDrawColor(180, 180, 180);
-                doc.line(140, finalY + 5, 190, finalY + 5);
-                doc.setTextColor(100, 100, 100);
-                doc.text("Authorized Signature", 165, finalY + 10, { align: 'center' });
-
-                doc.save(`Statement_${data.name || 'Member'}.pdf`);
-                downloadBtn.disabled = false;
-                downloadBtn.innerHTML = originalBtnText;
-
+                document.body.appendChild(exportWrapper);
+                // Heavy delay to ensure fonts/images are ready
+                await new Promise(r => setTimeout(r, 2000));
+                
+                await html2pdf().set(opt).from(exportWrapper).save();
+                document.body.removeChild(exportWrapper);
             } catch (err) {
                 console.error("PDF Export Error:", err);
-                alert("Download failed. The system reverted to standard mode.");
+                alert("Download failed. Please try again.");
+            } finally {
+                window.scrollTo(0, originalScroll);
                 downloadBtn.disabled = false;
                 downloadBtn.innerHTML = originalBtnText;
             }
@@ -1890,6 +2824,7 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
         contentEl.innerHTML = `<div style="color:red; padding:20px;">Error: ${error.message}</div>`;
     }
 };
+
 
 let currentReportType = '';
 
@@ -1900,9 +2835,10 @@ window.viewReport = async (type, fromDate = null, toDate = null) => {
     const downloadBtn = document.getElementById('downloadBtn');
     const modal = document.getElementById('reportPreviewModal');
     const filterUI = document.getElementById('reportFilters');
+    const t = translations[currentLang] || translations['en'];
 
     modal.style.display = 'flex';
-    contentEl.innerHTML = '<div style="text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading report...</div>';
+    contentEl.innerHTML = `<div style="text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'লোড হচ্ছে...' : 'Loading report...'}</div>`;
 
     if (['investments', 'expenses'].includes(type)) {
         filterUI.style.display = 'flex';
@@ -1913,106 +2849,236 @@ window.viewReport = async (type, fromDate = null, toDate = null) => {
     let html = '';
     try {
         if (type === 'expenses') {
-            titleEl.innerText = "Expense Ledger";
-            let query = db.collection('expenses').orderBy('date', 'desc');
-            if (fromDate) query = query.where('date', '>=', fromDate);
-            if (toDate) query = query.where('date', '<=', toDate);
-            const snap = await query.get();
-            html = `
-                <table class="report-table">
-                    <thead>
-                        <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr>
-                    </thead>
-                    <tbody>
-                        ${snap.docs.map(doc => {
-                const d = doc.data();
-                return `<tr><td>${d.date}</td><td>${d.category}</td><td>${d.comment || '-'}</td><td>Tk ${formatNumber(d.amount).replace('Tk ', '')}</td></tr>`;
-            }).join('')}
-                    </tbody>
-                </table>
-            `;
+            titleEl.innerText = t['report-expense-ledger'];
+            const snap = await db.collection('expenses').get();
+            let docs = snap.docs.map(doc => doc.data());
+
+            // Robust Sort
+            docs.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+            // Robust Filter
+            if (fromDate || toDate) {
+                docs = docs.filter(d => {
+                    const dDate = d.date || '';
+                    if (fromDate && dDate < fromDate) return false;
+                    if (toDate && dDate > toDate) return false;
+                    return true;
+                });
+            }
+
+            if (docs.length === 0) {
+                html = `<p style="text-align:center; padding:20px; color:#666;">${currentLang === 'bn' ? 'কোন তথ্য পাওয়া যায়নি' : 'No records found'}</p>`;
+            } else {
+                html = `
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>${t['label-date'] || 'Date'}</th>
+                                <th>${t['label-category'] || 'Category'}</th>
+                                <th>${t['label-description'] || 'Description'}</th>
+                                <th>${t['label-amount'] || 'Amount'}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${docs.map(d => `
+                                <tr>
+                                    <td>${d.date || '-'}</td>
+                                    <td>${d.category || '-'}</td>
+                                    <td>${d.comment || '-'}</td>
+                                    <td>${formatNumber(d.amount || 0)}</td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table>`;
+            }
         }
         else if (type === 'master') {
-            titleEl.innerText = "Master Financials";
+            titleEl.innerText = t['report-financial-audit'];
             const statsSnap = await db.collection('system').doc('stats').get();
             const totalProfit = statsSnap.exists ? (statsSnap.data().totalProfit || 0) : 0;
-            const users = await db.collection('users').get();
-            let totalSavings = 0;
-            users.forEach(u => totalSavings += (u.data().savings || 0));
+            const usersSnap = await db.collection('users').get();
+            const users = usersSnap.docs.map(u => u.data());
+            
+            let totalSavings = _globalSavingsSum;
+            if (totalSavings === 0) {
+                users.forEach(u => totalSavings += (u.savings || 0));
+            }
+
+            let grandTotalCompany = 0;
+
             html = `
                 <table class="report-table">
                     <thead>
-                        <tr><th>Name</th><th>Email</th><th>Phone</th><th>Savings</th><th>Profit Share</th></tr>
+                        <tr>
+                            <th>${t['label-name'] || 'Name'}</th>
+                            <th>${t['label-total-savings'] || 'Savings'}</th>
+                            <th>${t['label-member-profit'] || 'Member Profit'}</th>
+                            <th>${t['label-company-share'] || 'Company Share'}</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        ${users.docs.map(u => {
-                const d = u.data();
-                const userSavings = d.savings || 0;
-                let profitShare = 0;
-                if (totalSavings > 0) profitShare = (userSavings / totalSavings) * totalProfit;
-                return `<tr>
+                        ${users.map(d => {
+                            const userSavings = d.savings || 0;
+                            const profitPct = d.profitPercentage || 100;
+                            let totalPotential = 0;
+                            if (totalSavings > 0) totalPotential = (userSavings / totalSavings) * totalProfit;
+                            
+                            const memberShare = totalPotential * (profitPct / 100);
+                            const companyShare = totalPotential - memberShare;
+                            grandTotalCompany += companyShare;
+
+                            return `<tr>
                                 <td>${d.name || 'N/A'}</td>
-                                <td>${d.email}</td>
-                                <td>${d.phone || 'N/A'}</td>
-                                <td>Tk ${formatNumber(userSavings).replace('Tk ', '')}</td>
-                                <td style="color: #2D5A47; font-weight: 600;">Tk ${formatNumber(profitShare.toFixed(2)).replace('Tk ', '')}</td>
+                                <td>${formatNumber(userSavings)}</td>
+                                <td style="color: #2D5A47; font-weight: 600;">${formatNumber(memberShare.toFixed(2))}</td>
+                                <td style="color: #666; font-style: italic;">${formatNumber(companyShare.toFixed(2))}</td>
                             </tr>`;
-            }).join('')}
+                        }).join('')}
                     </tbody>
-                </table>
-            `;
+                    <tfoot>
+                        <tr style="background: #f0f7f4; font-weight: 800; border-top: 2px solid #2D5A47;">
+                            <td colspan="3" style="text-align: right; padding: 12px;">${t['label-total-company-share'] || 'Total Accrued Company Share'}:</td>
+                            <td style="color: var(--primary-color); padding: 12px;">${formatNumber(grandTotalCompany.toFixed(2))}</td>
+                        </tr>
+                    </tfoot>
+                </table>`;
         }
         else if (type === 'investments') {
-            titleEl.innerText = "Investment Portfolio";
-            let query = db.collection('investments').orderBy('date', 'desc');
-            if (fromDate) query = query.where('date', '>=', fromDate);
-            if (toDate) query = query.where('date', '<=', toDate);
-            const snap = await query.get();
+            titleEl.innerText = t['report-investments'];
+            const snap = await db.collection('investments').get();
+            let docs = snap.docs.map(doc => doc.data());
+
+            docs.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+            if (fromDate || toDate) {
+                docs = docs.filter(d => {
+                    const dDate = d.date || '';
+                    if (fromDate && dDate < fromDate) return false;
+                    if (toDate && dDate > toDate) return false;
+                    return true;
+                });
+            }
+
+            if (docs.length === 0) {
+                html = `<p style="text-align:center; padding:20px; color:#666;">${currentLang === 'bn' ? 'কোন তথ্য পাওয়া যায়নি' : 'No records found'}</p>`;
+            } else {
+                html = `
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>${t['label-project-name'] || 'Project'}</th>
+                                <th>${t['label-date'] || 'Date'}</th>
+                                <th>${t['label-status'] || 'Status'}</th>
+                                <th>${t['label-invested'] || 'Invested'}</th>
+                                <th>${t['label-profit'] || 'Profit'}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${docs.map(d => {
+                                const status = (d.status === 'withdrawn' || d.status === 'completed') ? (t['label-completed'] || 'Completed') : (t['label-ongoing'] || 'Ongoing');
+                                return `<tr>
+                                    <td>${d.sector || '-'}</td>
+                                    <td>${d.date || '-'}</td>
+                                    <td>${status}</td>
+                                    <td>${formatNumber(d.amount || 0)}</td>
+                                    <td style="color: var(--success); font-weight: 600;">${formatNumber(d.profitAmount || 0)}</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>`;
+            }
+        }
+        else if (type === 'deposits') {
+            titleEl.innerText = t['report-deposit-ledger'];
+            const snap = await db.collection('deposits').where('status', '==', 'approved').orderBy('timestamp', 'desc').get();
+            
+            if (snap.empty) {
+                html = `<p style="text-align:center; padding:20px; color:#666;">${currentLang === 'bn' ? 'কোনো ডিপোজিট পাওয়া যায়নি।' : 'No deposits found.'}</p>`;
+            } else {
+                html = `
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>${t['label-date'] || 'Date'}</th>
+                                <th>${t['label-member'] || 'Member'}</th>
+                                <th>${t['label-category'] || 'Category'}</th>
+                                <th>${t['label-amount'] || 'Amount'}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${snap.docs.map(doc => {
+                                const d = doc.data();
+                                const typeStr = d.type === 'Other' ? (d.description || 'Other') : (d.type + (d.month !== 'N/A' ? ` (${currentLang === 'bn' ? d.month.replace('January', 'জানুয়ারি').replace('February', 'ফেব্রুয়ারি').replace('March', 'মার্চ').replace('April', 'এপ্রিল').replace('May', 'মে').replace('June', 'জুন').replace('July', 'জুলাই').replace('August', 'আগস্ট').replace('September', 'সেপ্টেম্বর').replace('October', 'অক্টোবর').replace('November', 'নভেম্বর').replace('December', 'ডিসেম্বর') : d.month} ${d.year})` : ''));
+                                return `<tr>
+                                    <td>${d.date || 'N/A'}</td>
+                                    <td>${d.userName || 'N/A'}</td>
+                                    <td>${typeStr}</td>
+                                    <td>${formatNumber(d.amount || 0)}</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>`;
+            }
+        }
+        else if (type === 'members') {
+            titleEl.innerText = t['report-member-audit'];
+            const snap = await db.collection('users').get();
             html = `
                 <table class="report-table">
                     <thead>
-                        <tr><th>Project</th><th>Date</th><th>Status</th><th>Invested</th><th>Profit</th></tr>
+                        <tr>
+                            <th>${t['label-name'] || 'Name'}</th>
+                            <th>${t['label-phone'] || 'Phone'}</th>
+                            <th>${t['label-email'] || 'Email'}</th>
+                            <th>${t['label-share-pct'] || 'Share (%)'}</th>
+                            <th>${t['label-address'] || 'Address'}</th>
+                        </tr>
                     </thead>
                     <tbody>
                         ${snap.docs.map(doc => {
-                const d = doc.data();
-                const status = (d.status === 'withdrawn' || d.status === 'completed') ? 'Completed' : 'Ongoing';
-                return `<tr><td>${d.sector}</td><td>${d.date}</td><td>${status}</td><td>Tk ${d.amount}</td><td>Tk ${d.profitAmount || 0}</td></tr>`;
-            }).join('')}
+                            const d = doc.data();
+                            return `<tr>
+                                <td>${d.name || 'N/A'}</td>
+                                <td>${d.phone || '-'}</td>
+                                <td>${d.email}</td>
+                                <td style="text-align: center; font-weight: bold;">${d.profitPercentage || 100}%</td>
+                                <td>${d.address || '-'}</td>
+                            </tr>`;
+                        }).join('')}
                     </tbody>
-                </table>
-            `;
+                </table>`;
         }
-        else if (type === 'members') {
-            titleEl.innerText = "Member Audit";
-            const users = await db.collection('users').get();
-            html = `
-                <table class="report-table">
-                    <thead>
-                        <tr><th>Name</th><th>Phone</th><th>Address</th><th>Nominee</th><th>Photos/NID</th></tr>
-                    </thead>
-                    <tbody>
-                        ${users.docs.map(u => {
-                const d = u.data();
-                const docs = (d.memberPhoto ? '✅ ' : '❌ ') + (d.nidURL ? '🆔 ' : '💨 ');
-                return `<tr><td>${d.name || 'N/A'}</td><td>${d.phone || 'N/A'}</td><td>${d.address || 'N/A'}</td><td>${d.nominee?.name || '-'}</td><td>${docs}</td></tr>`;
-            }).join('')}
-                    </tbody>
-                </table>
-            `;
+        else if (type === 'archived') {
+            titleEl.innerText = currentLang === 'bn' ? 'আর্কাইভ' : "Deleted Members Archive";
+            const snap = await db.collection('archivedMembers').get();
+            if (snap.empty) {
+                html = `<p style="text-align:center; padding:20px; color:#666;">${currentLang === 'bn' ? 'আর্কাইভ খালি।' : 'Archive is empty.'}</p>`;
+            } else {
+                html = `
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>${t['label-date'] || 'Date'}</th>
+                                <th>${t['label-name'] || 'Name'}</th>
+                                <th>${t['label-payout'] || 'Payout'}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${snap.docs.map(doc => {
+                                const d = doc.data();
+                                const delDate = d.deletedAt ? new Date(d.deletedAt.seconds * 1000).toLocaleDateString(currentLang === 'bn' ? 'bn-BD' : 'en-US') : 'N/A';
+                                return `<tr>
+                                    <td>${delDate}</td>
+                                    <td>${d.name || 'N/A'}</td>
+                                    <td>${formatNumber(d.finalPayout || 0)}</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>`;
+            }
         }
-
-        const dateRangeText = (fromDate || toDate) ? `
-            <div style="font-size: 0.9rem; margin-bottom: 15px; color: #2D5A47; font-weight: 600;">
-                Filtered From: ${fromDate || 'Start'} To: ${toDate || 'Present'}
-            </div>
-        ` : '';
 
         const displayHtml = `
-            <div style="padding: 20px;">
-                <h2 style="color: #2D5A47; text-align: center; margin-bottom: 10px;">${titleEl.innerText}</h2>
-                <div style="font-size: 0.8rem; color: #666; text-align: center; margin-bottom: 20px;">Generated on: ${new Date().toLocaleString()}</div>
-                ${dateRangeText}
+            <div style="padding: 10px;">
                 <div class="report-table-wrapper">
                     ${html}
                 </div>
@@ -2021,64 +3087,81 @@ window.viewReport = async (type, fromDate = null, toDate = null) => {
 
         contentEl.innerHTML = displayHtml;
 
-        downloadBtn.onclick = () => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({
-                orientation: type === 'members' ? 'landscape' : 'portrait',
-                unit: 'mm',
-                format: 'a4'
-            });
-
+        downloadBtn.onclick = async () => {
             const originalBtnText = downloadBtn.innerHTML;
             downloadBtn.disabled = true;
-            downloadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Exporting...';
+            downloadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'এক্সপোর্ট হচ্ছে...' : 'Exporting...'}`;
+
+            const orientation = (type === 'members') ? 'landscape' : 'portrait';
+            const originalScroll = window.scrollY;
+            window.scrollTo(0, 0);
+
+            const exportWrapper = document.createElement('div');
+            exportWrapper.id = 'temp-report-export-wrapper';
+            exportWrapper.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: -5000px;
+                width: ${orientation === 'landscape' ? '297mm' : '210mm'};
+                background: white;
+                color: black;
+                padding: 10mm;
+                box-sizing: border-box;
+                font-family: 'SolaimanLipi', 'Inter', 'Outfit', sans-serif !important;
+            `;
+
+            exportWrapper.innerHTML = `
+                <style>
+                    #temp-report-export-wrapper { background: white !important; }
+                    #temp-report-export-wrapper * { 
+                        color: black !important; 
+                        background-color: transparent !important;
+                        font-family: 'SolaimanLipi', 'Inter', 'Outfit', sans-serif !important;
+                        visibility: visible !important;
+                    }
+                    #temp-report-export-wrapper .report-table th { background-color: #f1f5f9 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; }
+                    #temp-report-export-wrapper .report-table td { border: 1px solid #e2e8f0 !important; }
+                </style>
+                <div style="background: white !important; width: 100% !important;">
+                    <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px solid #2D5A47; padding-bottom: 12px;">
+                        <h1 style="color: #2D5A47; margin: 0; text-transform: uppercase; letter-spacing: 4px; font-size: 1.8rem; font-weight: 800;">GROW HALAL</h1>
+                        <p style="margin: 3px 0; font-weight: 600; color: #444; letter-spacing: 1px; text-transform: uppercase; font-size: 0.7rem;">${t['label-system-report'] || 'OFFICIAL SYSTEM REPORT'}</p>
+                        <div style="font-size: 0.75rem; color: #666; margin-top: 3px;">${currentLang === 'bn' ? 'রিপোর্টের ধরণ' : 'Report Type'}: ${titleEl.innerText}</div>
+                        <div style="font-size: 0.75rem; color: #666;">${t['label-report-date'] || 'Generated'}: ${new Date().toLocaleString(currentLang === 'bn' ? 'bn-BD' : 'en-US')}</div>
+                    </div>
+                    <div class="report-table-wrapper" style="border: none;">
+                        ${contentEl.innerHTML}
+                    </div>
+                    <div style="margin-top: 35px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; font-size: 0.65rem; color: #999;">
+                        <div>${t['label-operator'] || 'Operator'}: Habibullah Foridi</div>
+                        <div>Security ID: GH-RPT-${Date.now().toString(36).toUpperCase()}</div>
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin: 5,
+                filename: `${type}_report_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true, 
+                    letterRendering: true,
+                    backgroundColor: '#ffffff'
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: orientation }
+            };
 
             try {
-                // Header
-                doc.setTextColor(45, 90, 71);
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(26);
-                const centerX = type === 'members' ? 148.5 : 105;
-                doc.text("GROW HALAL", centerX, 20, { align: 'center' });
-
-                doc.setFontSize(10);
-                doc.setTextColor(100, 100, 100);
-                doc.text("OFFICIAL SYSTEM REPORT", centerX, 26, { align: 'center' });
-
-                // Report Title
-                doc.setFontSize(16);
-                doc.setTextColor(30, 30, 30);
-                doc.text(titleEl.innerText, centerX, 40, { align: 'center' });
-
-                doc.setFontSize(9);
-                doc.text(`Generated: ${new Date().toLocaleString()}`, centerX, 46, { align: 'center' });
-
-                const tableEl = contentEl.querySelector('table');
-                if (tableEl) {
-                    doc.autoTable({
-                        html: tableEl,
-                        startY: 55,
-                        theme: 'grid',
-                        headStyles: { fillColor: [45, 90, 71], textColor: [255, 255, 255] },
-                        styles: { fontSize: 8, cellPadding: 2 },
-                        margin: { left: 15, right: 15 }
-                    });
-                }
-
-                // Footer
-                const finalY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 100) + 15;
-                doc.setFontSize(8);
-                doc.setTextColor(150, 150, 150);
-                doc.text(`Operator: Habibullah Foridi`, 15, finalY);
-                doc.text(`Security ID: GH-RPT-${Date.now().toString(36).toUpperCase()}`, 15, finalY + 4);
-
-                doc.save(`${type}_report_${new Date().toISOString().split('T')[0]}.pdf`);
-                downloadBtn.disabled = false;
-                downloadBtn.innerHTML = originalBtnText;
-
+                document.body.appendChild(exportWrapper);
+                await new Promise(r => setTimeout(r, 2000));
+                await html2pdf().set(opt).from(exportWrapper).save();
+                document.body.removeChild(exportWrapper);
             } catch (err) {
                 console.error("PDF Error:", err);
-                alert("Download failed. Standard export failed.");
+                alert("Download failed. Please try again.");
+            } finally {
+                window.scrollTo(0, originalScroll);
                 downloadBtn.disabled = false;
                 downloadBtn.innerHTML = originalBtnText;
             }
@@ -2088,6 +3171,7 @@ window.viewReport = async (type, fromDate = null, toDate = null) => {
         contentEl.innerHTML = `<div style="color:red; padding:20px;">Error: ${error.message}</div>`;
     }
 };
+
 
 window.applyReportFilters = () => {
     const fromDate = document.getElementById('reportFromDate').value;
@@ -2105,6 +3189,13 @@ window.updateUserRole = async () => {
     if (!email) {
         alert("Please enter an email address.");
         return;
+    }
+
+    const btn = document.querySelector('#ownerSection button');
+    const originalBtnText = btn ? btn.innerText : 'Update Role';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Updating...';
     }
 
     try {
@@ -2136,6 +3227,11 @@ window.updateUserRole = async () => {
         document.getElementById('targetEmail').value = '';
     } catch (e) {
         alert("Error updating role: " + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = originalBtnText;
+        }
     }
 };
 
@@ -2156,11 +3252,17 @@ window.forgotPassword = async () => {
         alert("Please enter your email address in the email field first.");
         return;
     }
+    const btn = document.querySelector('.login-links a[onclick="forgotPassword()"]');
+    const originalText = btn ? btn.innerText : 'Forgot Password?';
+    if (btn) btn.innerText = 'Sending...';
+
     try {
         await auth.sendPasswordResetEmail(email);
         alert("A password reset link has been sent to your email address. Please check your inbox (and spam folder).");
     } catch (error) {
         alert("Error: " + error.message);
+    } finally {
+        if (btn) btn.innerText = originalText;
     }
 };
 

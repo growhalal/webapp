@@ -117,8 +117,12 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h4 style="font-size: 0.9rem;"><span data-i18n="section-directory">Member Directory</span> (<span
                             id="totalMembersCount">0</span>)</h4>
-                    <span style="font-size: 0.75rem; color: #ef4444;"><span class="due-indicator pulse"></span> Payment
-                        Due</span>
+                    <!-- Due Legend -->
+                    <div style="display: flex; gap: 10px; font-size: 0.7rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 4px;"><span class="due-indicator due-monthly"></span> Monthly</div>
+                        <div style="display: flex; align-items: center; gap: 4px;"><span class="due-indicator due-admission"></span> Admission</div>
+                        <div style="display: flex; align-items: center; gap: 4px;"><span class="due-indicator due-extra"></span> Extra</div>
+                    </div>
                 </div>
                 <div id="allUsersList">
                     <!-- User list with due indicator will load here -->
@@ -222,12 +226,6 @@
                             Investment</button>
                     </form>
 
-                    <div style="margin-bottom: 24px;">
-                        <button onclick="downloadInvestmentReport()" class="btn btn-primary"
-                            style="padding: 8px 16px; font-size: 0.85rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; background: var(--bg-light); border: 1px solid var(--border-color); color: var(--text-main); box-shadow: none;">
-                            <i class="fa-solid fa-download" style="color: #f97316;"></i> Download Statement
-                        </button>
-                    </div>
                     <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 25px 0;">
                 </div>
 
@@ -339,6 +337,55 @@
                             <i class="fa-solid fa-eye"></i> View Report
                         </button>
                     </div>
+
+                    <!-- Report Card 5: Deposit Ledger (Receipts) -->
+                    <div class="glass-card"
+                        style="padding: 20px; text-align: center; background: rgba(16, 185, 129, 0.02); border: 1px solid rgba(16, 185, 129, 0.1);">
+                        <i class="fa-solid fa-file-invoice"
+                            style="font-size: 2rem; color: #10b981; margin-bottom: 15px;"></i>
+                        <h4 style="margin-bottom: 10px;" data-i18n="report-deposit-ledger">Deposit Ledger</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;"
+                            data-i18n="desc-deposit">Track all member deposits and download transaction receipts.</p>
+                        <button onclick="viewReport('deposits')" class="btn btn-primary btn-sm"
+                            style="width: 100%; background: #10b981; border-radius: 8px;" data-i18n="view-report">
+                            <i class="fa-solid fa-eye"></i> View Report
+                        </button>
+                    </div>
+
+                    <!-- Report Card 6: Deleted Members Archive -->
+                    <div id="reportArchiveCard" class="glass-card"
+                        style="padding: 20px; text-align: center; background: rgba(55, 65, 81, 0.02); border: 1px solid rgba(55, 65, 81, 0.1); display: none;">
+                        <i class="fa-solid fa-box-archive"
+                            style="font-size: 2rem; color: #374151; margin-bottom: 15px;"></i>
+                        <h4 style="margin-bottom: 10px;">Deleted Members Archive</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Historical data of permanently deleted user accounts.</p>
+                        <button onclick="viewReport('archived')" class="btn btn-primary btn-sm"
+                            style="width: 100%; background: #374151; border-radius: 8px;">
+                            <i class="fa-solid fa-eye"></i> View Report
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Company Account Section -->
+            <section id="companyAccountSection" class="glass-card mb-4" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="font-size: 1.2rem; color: var(--primary-dark);"><i class="fa-solid fa-building-columns"></i> Company Account</h3>
+                    <i class="fa-solid fa-xmark" onclick="hideSection('companyAccountSection')" style="cursor: pointer; font-size: 1.2rem;"></i>
+                </div>
+
+                <!-- Company Balance Card -->
+                <div style="background: linear-gradient(135deg, #4b5563, #1f2937); border-radius: 15px; padding: 25px; color: white; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; overflow: hidden;">
+                    <i class="fa-solid fa-vault" style="position: absolute; right: -20px; bottom: -20px; font-size: 8rem; opacity: 0.1;"></i>
+                    <p style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; opacity: 0.8;">Total Company Fund</p>
+                    <h2 style="font-size: 2.2rem; margin: 0; font-weight: 700;">Tk <span id="companyTotalBalance">0.00</span></h2>
+                </div>
+
+                <h4 style="font-size: 1rem; margin-bottom: 15px; color: var(--text-main); border-bottom: 2px solid var(--glass-border); padding-bottom: 8px;">Transaction Ledger</h4>
+                
+                <div id="companyLedgerList" style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Ledger items will load here -->
+                    <p style="color: var(--text-muted); text-align: center; padding: 20px;">Loading ledger...</p>
                 </div>
             </section>
 
@@ -412,6 +459,11 @@
                 <i class="fa-solid fa-folder-open"></i> Reports Cabinet
             </div>
 
+            <div id="menuCompanyAccount" class="drawer-link" onclick="showSection('companyAccountSection')" style="display: none;"
+                data-i18n="menu-company-account">
+                <i class="fa-solid fa-building-columns"></i> Company Account
+            </div>
+
             <!-- Support Menu Item -->
             <div class="drawer-link" onclick="toggleSupport()">
                 <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
@@ -450,49 +502,82 @@
 
             <form id="depositForm">
                 <div class="form-section">
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label" data-i18n="label-date">Date</label>
-                            <input type="date" id="depDate" class="input-box" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" data-i18n="label-month">Month</label>
-                            <select id="depMonth" class="input-box" required>
-                                <option value="January">January</option>
-                                <option value="February">February</option>
-                                <option value="March">March</option>
-                                <option value="April">April</option>
-                                <option value="May">May</option>
-                                <option value="June">June</option>
-                                <option value="July">July</option>
-                                <option value="August">August</option>
-                                <option value="September">September</option>
-                                <option value="October">October</option>
-                                <option value="November">November</option>
-                                <option value="December">December</option>
-                            </select>
-                        </div>
-                    </div>
                     <div class="form-group">
-                        <label class="form-label" data-i18n="label-type">Deposit Type</label>
-                        <select id="depType" class="input-box" onchange="updateDepositAmount()" required>
-                            <option value="" disabled selected>Select Type</option>
-                            <option value="Admission Fee">Admission Fee (10,000 Tk)</option>
-                            <option value="Monthly Deposit">Monthly Deposit (1,000 Tk)</option>
-                            <option value="Extra Deposit">Extra Deposit (1,500 Tk)</option>
-                            <option value="Other">Other</option>
-                        </select>
+                        <label class="form-label" data-i18n="label-date">Date</label>
+                        <input type="date" id="depDate" class="input-box" required>
                     </div>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label" data-i18n="label-year">Year</label>
-                            <input type="number" id="depYear" class="input-box" value="2026" required>
+
+                    <div class="deposit-categories">
+                        <!-- Admission Fee Section -->
+                        <div class="category-item" id="admFeeSection">
+                            <div class="category-header">
+                                <div class="category-title"><i class="fa-solid fa-user-plus"></i> <span data-i18n="admission-fee">Admission Fee</span></div>
+                            </div>
+                            <input type="number" id="admAmount" class="input-box" placeholder="Tk 0.00" oninput="calculateDepositTotal()">
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" data-i18n="label-amount">Amount</label>
-                            <input type="number" id="depAmount" class="input-box" placeholder="Tk 0.00"
-                                data-i18n-placeholder="placeholder-tk" required>
+
+                        <!-- Monthly Deposit Section -->
+                        <div class="category-item">
+                            <div class="category-header">
+                                <div class="category-title"><i class="fa-solid fa-calendar-check"></i> <span data-i18n="monthly-deposit">Monthly Deposit</span></div>
+                            </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" style="font-size: 0.65rem;">Monthly Amount</label>
+                                    <input type="number" id="monthlyRate" class="input-box" value="1000" oninput="calculateDepositTotal()">
+                                </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" style="font-size: 0.65rem;">Select Months</label>
+                                <div class="custom-dropdown-container">
+                                    <div class="custom-dropdown-header" onclick="toggleCustomDropdown('monthDropdownList')">
+                                        <span id="monthDropdownLabel">Select Months...</span>
+                                        <i class="fa-solid fa-chevron-down"></i>
+                                    </div>
+                                    <div class="custom-dropdown-list" id="monthDropdownList" style="max-height: 300px;">
+                                        <!-- Dynamically populated -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Extra Deposit Section -->
+                        <div class="category-item">
+                            <div class="category-header">
+                                <div class="category-title"><i class="fa-solid fa-star"></i> <span data-i18n="extra-deposit">Extra Deposit</span></div>
+                            </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" style="font-size: 0.65rem;">Extra Amount</label>
+                                    <input type="number" id="extraRate" class="input-box" value="1500" oninput="calculateDepositTotal()">
+                                </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div class="custom-dropdown-container">
+                                    <div class="custom-dropdown-header" onclick="toggleCustomDropdown('extraDropdownList')">
+                                        <span id="extraDropdownLabel">Select Term...</span>
+                                        <i class="fa-solid fa-chevron-down"></i>
+                                    </div>
+                                    <div class="custom-dropdown-list" id="extraDropdownList">
+                                        <!-- Dynamically populated -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Other Section -->
+                        <div class="category-item">
+                            <div class="category-header">
+                                <div class="category-title"><i class="fa-solid fa-circle-plus"></i> <span data-i18n="other">Other</span></div>
+                            </div>
+                            <div class="grid-2" style="gap: 10px;">
+                                <input type="number" id="otherAmount" class="input-box" placeholder="Amount" oninput="calculateDepositTotal()">
+                                <input type="text" id="otherNote" class="input-box" placeholder="Short Note">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Display -->
+                    <div class="total-display-card">
+                        <div class="total-display-label">Grand Total</div>
+                        <div class="total-display-amount" id="depTotalDisplay">Tk 0.00</div>
+                        <input type="hidden" id="depAmount" value="0"> <!-- Keeping original ID for compatibility if needed -->
                     </div>
                 </div>
 
@@ -616,7 +701,21 @@
                     </div>
                 </div>
 
+
+                <!-- Section 4: System Settings (Owner/Admin only) -->
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fa-solid fa-gears"></i> System Settings</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Profit Share (%) <span class="required-mark">*</span></label>
+                            <input type="number" id="memProfitPct" class="input-box" value="100" min="0" max="100" required>
+                            <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">Percentage of profit the member receives. Remainder goes to company.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div style="display: flex; gap: 15px; margin-top: 20px;">
+
                     <button type="submit" class="btn btn-primary" style="flex: 2;" data-i18n="btn-create-account">Create
                         Account</button>
                     <button type="button" onclick="closeAddMemberModal()" class="btn btn-link" style="flex: 1;"
@@ -726,11 +825,76 @@
                     </div>
                 </div>
 
+                <div class="form-section">
+                    <div class="form-section-title">System Settings</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Profit Share (%)</label>
+                            <input type="number" id="editMemProfitPct" class="input-box" min="0" max="100">
+                        </div>
+                    </div>
+                </div>
+
+
                 <div style="display: flex; gap: 15px; margin-top: 20px;">
+
                     <button type="submit" class="btn btn-primary" style="flex: 2;" data-i18n="save">Save
                         Changes</button>
                     <button type="button" onclick="closeEditProfile()" class="btn btn-link" style="flex: 1;"
                         data-i18n="cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Member Confirmation Modal -->
+    <div id="deleteMemberModal" class="modal-overlay">
+        <div class="modal-content animate-fade" style="max-width: 500px; border-top: 5px solid var(--error);">
+            <div class="modal-header">
+                <h2 style="color: var(--error);"><i class="fa-solid fa-triangle-exclamation"></i> Delete Member</h2>
+                <div class="close-btn" onclick="closeDeleteMemberModal()"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+            
+            <div style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                <p style="color: var(--error); font-size: 0.9rem; margin-bottom: 5px;"><strong>Warning:</strong> This action is permanent and cannot be undone.</p>
+                <p style="color: var(--text-main); font-size: 0.85rem;">The member's data will be transferred to the <strong>Report Cabinet Archive</strong>.</p>
+            </div>
+
+            <form id="deleteMemberForm">
+                <input type="hidden" id="delMemberUid">
+                <input type="hidden" id="delMemberTotalProfit">
+                <input type="hidden" id="delMemberTotalSavings">
+                
+                <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--text-main);">Financial Settlement</h3>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                    <span style="color: var(--text-muted);">Total Savings (Principal):</span>
+                    <strong style="color: var(--primary-color);">Tk <span id="delSavingsDisplay">0</span></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.9rem;">
+                    <span style="color: var(--text-muted);">Current Profit Share:</span>
+                    <strong style="color: var(--success);">Tk <span id="delProfitDisplay">0</span></strong>
+                </div>
+
+                <div class="form-group" style="background: var(--bg-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <label class="form-label" style="display: flex; justify-content: space-between;">
+                        <span>Company Deduction (%)</span>
+                        <span style="color: var(--error); font-weight: bold;">- Tk <span id="delDeductionAmount">0</span></span>
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="number" id="delDeductionPct" class="input-box" value="10" min="0" max="100" style="width: 100px; text-align: center;" oninput="calculateDeletionPayout()">
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">% deducted from profit</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 2px dashed var(--border-color); font-size: 1.1rem;">
+                    <strong>Final Payout:</strong>
+                    <strong style="color: var(--primary-dark);">Tk <span id="delFinalPayout">0</span></strong>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-top: 25px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 2; background: var(--error);">Confirm Deletion</button>
+                    <button type="button" onclick="closeDeleteMemberModal()" class="btn btn-link" style="flex: 1;">Cancel</button>
                 </div>
             </form>
         </div>
@@ -741,8 +905,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <!-- PDF Generation Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="app.js?v=5" defer></script>
     <!-- Report Preview Modal -->

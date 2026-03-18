@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Database Migration - Grow Halal</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body style="font-family: sans-serif; padding: 50px; background: #f0f7f4;">
+    <h1>Database Migration: Update Join Dates</h1>
+    <p>This script will update all members' <code>createdAt</code> to <strong>December 1, 2025</strong>.</p>
+    <button id="migrateBtn" style="padding: 15px 30px; background: #2D5A47; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Run Migration</button>
+    <div id="status" style="margin-top: 20px; white-space: pre-wrap; font-family: monospace;"></div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDRzQD7ZBeiBuW0mHRtUeczt47kF0qSQCM",
+            authDomain: "growhalall.firebaseapp.com",
+            projectId: "growhalall",
+            storageBucket: "growhalall.firebasestorage.app",
+            messagingSenderId: "391722870660",
+            appId: "1:391722870660:web:73411811889b8c896c1fd1",
+            measurementId: "G-1CP0NWCBFH"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        const migrateBtn = document.getElementById('migrateBtn');
+        const status = document.getElementById('status');
+
+        let currentUser = null;
+
+        auth.onAuthStateChanged(user => {
+            currentUser = user;
+            if (user) {
+                status.innerText = `Logged in as: ${user.email}\n`;
+                migrateBtn.disabled = false;
+            } else {
+                status.innerText = "Error: You must be logged in as an Owner to run this script. Please log in to the dashboard first, then refresh this page.\n";
+                migrateBtn.disabled = true;
+            }
+        });
+
+        migrateBtn.onclick = async () => {
+            if (!currentUser) {
+                alert("Please log in first.");
+                return;
+            }
+            migrateBtn.disabled = true;
+            status.innerText += "Starting migration...\n";
+            
+            try {
+                // Check if user is owner
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                if (!userDoc.exists || userDoc.data().role !== 'owner') {
+                    throw new Error("You do not have 'owner' permissions to run this migration.");
+                }
+
+                const snapshot = await db.collection('users').get();
+                status.innerText += `Found ${snapshot.size} users.\n`;
+
+                const newDate = new Date("2025-12-01T00:00:00Z");
+                const timestamp = firebase.firestore.Timestamp.fromDate(newDate);
+
+                const batch = db.batch();
+                snapshot.forEach(doc => {
+                    batch.update(doc.ref, { createdAt: timestamp });
+                    status.innerText += `Queued update for: ${doc.id}\n`;
+                });
+
+                await batch.commit();
+                status.innerText += "\n[SUCCESS] Migration completed! All members' join dates updated to Dec 1, 2025.";
+            } catch (error) {
+                status.innerText += "\n[ERROR] Migration failed: " + error.message;
+            }
+        };
+    </script>
+</body>
+</html>
