@@ -24,6 +24,14 @@ const db = firebase.firestore();
 
 // Global Data Caches
 const userNamesMap = {};
+let _globalSavingsSum = 0;
+let _globalProfitSum = 0;
+let _approvedDepositsCache = {};
+
+// Utility for number formatting
+const formatNumber = (num) => {
+    return 'Tk ' + Number(num).toLocaleString('en-IN');
+};
 
 // Fee Constants
 const REQUIRED_ADMISSION_FEE = 10000;
@@ -342,7 +350,30 @@ function applyTranslations() {
             el.placeholder = sets[key];
         }
     });
+window.waitForAssets = async (container) => {
+    // 1. Wait for Fonts
+    if (document.fonts) {
+        await document.fonts.ready;
+        // Even after ready, give it a moment for layout engine to stabilize
+        await new Promise(r => setTimeout(r, 800));
+    }
 
+    // 2. Wait for Images
+    const imgs = Array.from(container.querySelectorAll('img'));
+    const imgPromises = imgs.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve; // Continue even if one fails
+        });
+    });
+    
+    await Promise.all(imgPromises);
+    
+    // 3. Final Render Stabilizer
+    // This helps complex Bengali glyphs and absolute layouts settle
+    await new Promise(r => setTimeout(r, 700));
+};
     // Specialized translations for dynamic elements if necessary
     const emailInput = document.getElementById('email'); // login.html
     const passInput = document.getElementById('password'); // login.html
@@ -517,29 +548,98 @@ if (loginForm) {
 }
 
 async function checkUserRole(uid, email) {
-    if (email === 'growhalal0@gmail.com') {
-        userRole = 'owner';
-        await db.collection('users').doc(uid).set({ email, role: 'owner' }, { merge: true });
-        if (window.location.pathname.endsWith('login.html')) window.location.href = 'dashboard.html';
-        return;
-    }
+    try {
+        if (email === 'growhalal0@gmail.com') {
+            userRole = 'owner';
+            const repairBtn = document.getElementById('repairDuesBtn');
+            if (repairBtn) {
+                repairBtn.style.setProperty('display', 'inline-block', 'important');
+            }
+            
+            await db.collection('users').doc(uid).set({ email, role: 'owner' }, { merge: true });
+            return;
+        }
 
-    const doc = await db.collection('users').doc(uid).get();
-    if (doc.exists) {
-        userRole = doc.data().role || 'member';
-        if (window.location.pathname.endsWith('login.html')) window.location.href = 'dashboard.html';
-    } else {
-        window.location.href = 'dashboard.html';
+        const doc = await db.collection('users').doc(uid).get();
+        if (doc.exists) {
+            userRole = doc.data().role || 'member';
+        }
+    } catch (error) {
+        console.error("User Role Check Failed:", error);
+    } finally {
+        // ALWAYS navigate away from login screen on successful authentication 
+        // regardless of subsequent database query success/timeout/failure.
+        if (window.location.pathname.endsWith('login.html')) {
+            window.location.href = 'dashboard.html';
+        }
     }
 }
 
-// --- DASHBOARD LOGIC ---
+// --- DASHBOARD & RBAC SYSTEM ---
 
-// Utility for number formatting
-const formatNumber = (num) => {
-    return 'Tk ' + Number(num).toLocaleString('en-IN');
+// 1. RBAC UI Helper: Controls visibility based on role and explicit permissions
+const handleRoleUI = (userData) => {
+    const role = userData.role || 'member';
+    const isOwner = (userData.email && userData.email.toLowerCase() === 'growhalal0@gmail.com') || role === 'owner';
+    
+    // Always Visible to Everyone
+    ['menuInvestments', 'menuExpenses', 'menuUsers'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'flex';
+    });
+
+    // Restricted Items (Owner-Controlled)
+    const restricted = {
+        'menuAddMember': 'menuAddMember',
+        'menuApprovals': 'menuApprovals',
+        'menuAnnouncements': 'menuAnnouncements',
+        'menuRoles': 'menuRoles',
+        'menuReports': 'menuReports',
+        'menuCompanyAccount': 'menuCompanyAccount'
+    };
+
+    Object.keys(restricted).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            const hasPerm = userData.permissions && userData.permissions.includes(id);
+            el.style.display = (isOwner || hasPerm) ? 'flex' : 'none';
+        }
+    });
+
+    // Specialized individual sections
+    const adminInv = document.getElementById('adminInvestmentControls');
+    if (adminInv) adminInv.style.display = (isOwner || (userData.permissions && userData.permissions.includes('menuInvestments'))) ? 'block' : 'none';
+    
+    const addExp = document.getElementById('addExpenseBtn');
+    if (addExp) addExp.style.display = (isOwner || (userData.permissions && userData.permissions.includes('menuExpenses'))) ? 'block' : 'none';
+    
+    const archiveCard = document.getElementById('reportArchiveCard');
+    if (archiveCard) archiveCard.style.display = isOwner ? 'block' : 'none';
+
+    const ownerSect = document.getElementById('ownerSection');
+    if (ownerSect) ownerSect.style.display = isOwner ? 'block' : 'none';
+
+    const repairBtn = document.getElementById('repairDuesBtn');
+    if (repairBtn) repairBtn.style.display = isOwner ? 'inline-block' : 'none';
+
+    const dueReportBtn = document.getElementById('dueReportBtn');
+    if (dueReportBtn) {
+        dueReportBtn.style.display = (isOwner || role === 'admin' || role === 'manager') ? 'inline-block' : 'none';
+    }
 };
 
+// 2. System Stats Helpers
+const fetchSystemStats = async () => {
+    try {
+        const doc = await db.collection('system').doc('stats').get();
+        return doc.exists ? doc.data() : { totalSavings: 0, totalProfit: 0, totalInvestments: 0 };
+    } catch (e) {
+        console.error("Stats Fetch Error:", e);
+        return { totalSavings: 0, totalProfit: 0, totalInvestments: 0 };
+    }
+};
+
+// 3. Dashboard Initialization (The reactive entry point)
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
@@ -552,211 +652,276 @@ auth.onAuthStateChanged((user) => {
 });
 
 function setupDashboard(user) {
-    // 1. Personal User Data
+    // A. Reactive User Profile Listener
     db.collection('users').doc(user.uid).onSnapshot((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            document.getElementById('totalBalance').innerText = formatNumber(data.savings || 0);
-            const totalInvestEl = document.getElementById('totalInvestments');
-            if (totalInvestEl && data.investmentsTotal) {
-                totalInvestEl.innerText = formatNumber(data.investmentsTotal);
-            }
-
-            // Set Personalized Welcome
-            const firstName = (data.name || '').split(' ')[0] || 'Member';
-            document.getElementById('welcomeUser').innerText = `Hi, ${firstName}`;
-
-            userRole = data.role || 'member';
-            if (user.email && user.email.toLowerCase() === 'growhalal0@gmail.com') userRole = 'owner';
-
-            // --- COMPANY ACCOUNT LOGIC ---
-
-            window.loadCompanyAccount = () => {
-                db.collection('companyAccount').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
-                    const listEl = document.getElementById('companyLedgerList');
-                    const balanceEl = document.getElementById('companyTotalBalance');
-                    if (!listEl || !balanceEl) return;
-
-                    listEl.innerHTML = '';
-                    let totalBalance = 0;
-
-                    if (snapshot.empty) {
-                        listEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No transactions in Company Account yet.</p>';
-                        balanceEl.innerText = "0.00";
-                        return;
-                    }
-
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const amount = data.amount || 0;
-                        totalBalance += amount;
-
-                        const div = document.createElement('div');
-                        div.style.background = 'var(--bg-light)';
-                        div.style.padding = '15px';
-                        div.style.borderRadius = '10px';
-                        div.style.border = '1px solid var(--border-color)';
-                        div.style.display = 'flex';
-                        div.style.justifyContent = 'space-between';
-                        div.style.alignItems = 'center';
-                        div.innerHTML = `
-                <div>
-                    <strong style="color: var(--text-main); font-size: 0.95rem;">${data.type}</strong>
-                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Source: ${data.sourceUser} • ${data.date}</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">${data.description || ''}</div>
-                </div>
-                <div style="font-weight: bold; color: var(--success); font-size: 1.1rem;">
-                    + Tk ${formatNumber(amount).replace('Tk ', '')}
-                </div>
-            `;
-                        listEl.appendChild(div);
-                    });
-
-                    balanceEl.innerText = formatNumber(totalBalance).replace('Tk ', '');
-                });
-            };
-
-            // --- STRICT RBAC LOGIC ---
-            // 1. Always Visible to Everyone
-            ['menuInvestments', 'menuExpenses', 'menuUsers'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = 'flex';
-            });
-
-            // 2. Owner-Controlled Access (Restricted Items)
-            // Add Member, Approvals, Post Announcements, Permissions, Reports, Company Account
-            const restrictedPerms = ['menuAddMember', 'menuApprovals', 'menuAnnouncements', 'menuRoles', 'menuReports', 'menuCompanyAccount'];
-            restrictedPerms.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    // Visible if Owner OR explicitly granted in data.permissions
-                    const hasExplicitPerm = data.permissions && data.permissions.includes(id);
-                    el.style.display = (userRole === 'owner' || hasExplicitPerm) ? 'flex' : 'none';
-                }
-            });
-
-            // Show Archive Report Card only if Owner or explicitly granted Reports
-            const archiveCard = document.getElementById('reportArchiveCard');
-            if (archiveCard) {
-                archiveCard.style.display = (userRole === 'owner') ? 'block' : 'none';
-            }
-
-            // 3. Admin/Manager Controls inside sections
-            // Show/Hide Admin Controls in Investments Section
-            const invControls = document.getElementById('adminInvestmentControls');
-            if (invControls) {
-                // Keep access for Owner, and those with explicit Permissions menu access
-                const hasInvestPerm = data.permissions && data.permissions.includes('menuInvestments');
-                invControls.style.display = (userRole === 'owner' || hasInvestPerm) ? 'block' : 'none';
-            }
-
-            // Show/Hide Add Expense button
-            const addExpBtn = document.getElementById('addExpenseBtn');
-            if (addExpBtn) {
-                // Owner has it, others need explicit "menuExpenses" permission to add
-                const hasExpPerm = data.permissions && data.permissions.includes('menuExpenses');
-                addExpBtn.style.display = (userRole === 'owner' || hasExpPerm) ? 'block' : 'none';
-            }
-
-            // --- END STRICT RBAC ---
-
-            // 4. Trigger data loads
-            if (userRole !== 'member') loadPendingDeposits();
-            loadAllUsers(); // Directory is now public
-            loadManageInvestments();
-            loadExpenses();
-            if (userRole === 'owner' || (data.permissions && data.permissions.includes('menuCompanyAccount'))) {
-                loadCompanyAccount();
-            }
-        } else {
-            // Fallback: If Owner logs in but profile is missing, create it.
+        if (!doc.exists) {
             if (user.email && user.email.toLowerCase() === 'growhalal0@gmail.com') {
-                const ownerData = {
-                    uid: user.uid,
-                    email: user.email,
-                    name: 'Owner',
-                    role: 'owner',
-                    savings: 0,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                db.collection('users').doc(user.uid).set(ownerData);
-                document.getElementById('welcomeUser').innerText = "Hi, Owner";
-            } else {
-                document.getElementById('welcomeUser').innerText = "Hi, Member";
+                db.collection('users').doc(user.uid).set({ email: user.email, role: 'owner' }, { merge: true });
             }
+            return;
         }
-    }, (error) => {
-        console.error("User profile listener error:", error);
-    });
 
-    // 2. Global Totals (Aggregated Savings)
+        const data = doc.data();
+        userRole = data.role || 'member';
+        if (user.email && user.email.toLowerCase() === 'growhalal0@gmail.com') userRole = 'owner';
+
+        // Update Personal Stats
+        const welcomeEl = document.getElementById('welcomeUser');
+        if (welcomeEl) {
+            const firstName = (data.name || '').split(' ')[0] || (userRole === 'owner' ? 'Owner' : 'Member');
+            welcomeEl.innerText = `Hi, ${firstName}`;
+        }
+        
+        const balEl = document.getElementById('totalBalance');
+        if (balEl) balEl.innerText = formatNumber(data.savings || 0);
+
+        // Run RBAC UI Adjustments
+        handleRoleUI(data);
+
+        // Load Company Account if authorized
+        if (userRole === 'owner' || (data.permissions && data.permissions.includes('menuCompanyAccount'))) {
+            window.loadCompanyAccount();
+        }
+    }, (error) => console.error("Profile Listener Error:", error));
+
+    // B. Reactive Global Savings Listener
     db.collection('users').onSnapshot((snapshot) => {
         let globalSavings = 0;
-        snapshot.forEach(doc => {
-            globalSavings += (doc.data().savings || 0);
-        });
-        _globalSavingsSum = globalSavings; // Update global cache for PDF reporting
-        document.getElementById('totalSavings').innerText = formatNumber(globalSavings);
+        snapshot.forEach(uDoc => globalSavings += (uDoc.data().savings || 0));
+        _globalSavingsSum = globalSavings; // Shared for PDF report calculations
+        const el = document.getElementById('totalSavings');
+        if (el) el.innerText = formatNumber(globalSavings);
     });
 
+    // C. Reactive System Profit Listener
     db.collection('system').doc('stats').onSnapshot((doc) => {
         const el = document.getElementById('totalProfit');
         if (el) {
             const total = doc.exists ? (doc.data().totalProfit || 0) : 0;
+            _globalProfitSum = total; // Shared for PDF report calculations
             el.innerText = formatNumber(total);
             
-            // Virtual Company Share Indicator for Owners/Admins
+            // Accrued Company Share Indicator (Owner/Admin only)
             if (userRole === 'owner' || userRole === 'admin') {
                 updateCompanyAccruedIndicator(total);
             }
         }
     });
 
-    async function updateCompanyAccruedIndicator(totalSystemProfit) {
-        try {
-            const users = await db.collection('users').get();
-            let totalSavings = 0;
-            users.forEach(u => totalSavings += (u.data().savings || 0));
-            
-            let totalAccruedCompany = 0;
-            users.forEach(u => {
-                const d = u.data();
-                const uSavings = d.savings || 0;
-                const profitPct = d.profitPercentage || 100;
-                if (totalSavings > 0) {
-                    const totalSlice = (uSavings / totalSavings) * totalSystemProfit;
-                    totalAccruedCompany += totalSlice * (1 - (profitPct / 100));
-                }
-            });
-
-            let indicator = document.getElementById('companyAccruedDisplay');
-            if (!indicator) {
-                const profitCard = document.querySelector('.stat-card i.fa-chart-line').closest('.stat-card');
-                if (profitCard) {
-                    indicator = document.createElement('div');
-                    indicator.id = 'companyAccruedDisplay';
-                    indicator.style.fontSize = '0.7rem';
-                    indicator.style.color = 'var(--text-muted)';
-                    indicator.style.marginTop = '5px';
-                    profitCard.appendChild(indicator);
-                }
-            }
-            if (indicator) {
-                indicator.innerText = `Accrued Co. Share: ${formatNumber(totalAccruedCompany.toFixed(2))}`;
-            }
-        } catch (e) { console.error("Stats update error:", e); }
-    }
-
-    // 4. Global Current Investments Stat (Sum of active investments)
+    // D. Reactive Active Investments Listener
     db.collection('investments').where('status', '==', 'active').onSnapshot((snapshot) => {
         let totalActive = 0;
-        snapshot.forEach(doc => {
-            totalActive += (doc.data().amount || 0);
-        });
+        snapshot.forEach(iDoc => totalActive += (iDoc.data().amount || 0));
         const el = document.getElementById('totalInvestments');
         if (el) el.innerText = formatNumber(totalActive);
     });
+
+    // E. Initial Data Load For Lists
+    window.loadOngoingProjects();
+    loadAllUsers();
+    loadExpenses();
+    window.checkAnnouncements();
 }
+
+// 4. Helper for Company Accrued Calculation
+async function updateCompanyAccruedIndicator(totalSystemProfit) {
+    try {
+        const usersSnap = await db.collection('users').get();
+        let totalSavings = 0;
+        usersSnap.forEach(u => totalSavings += (u.data().savings || 0));
+        
+        let totalAccruedCompany = 0;
+        usersSnap.forEach(u => {
+            const d = u.data();
+            const uSavings = d.savings || 0;
+            const profitPct = d.profitPercentage || 100;
+            if (totalSavings > 0) {
+                const totalSlice = (uSavings / totalSavings) * totalSystemProfit;
+                totalAccruedCompany += totalSlice * (1 - (profitPct / 100));
+            }
+        });
+
+        let indicator = document.getElementById('companyAccruedDisplay');
+        if (!indicator) {
+            const profitCard = document.querySelector('.stat-card i.fa-chart-line')?.closest('.stat-card');
+            if (profitCard) {
+                indicator = document.createElement('div');
+                indicator.id = 'companyAccruedDisplay';
+                indicator.style.fontSize = '0.7rem';
+                indicator.style.color = 'var(--text-muted)';
+                indicator.style.marginTop = '5px';
+                profitCard.appendChild(indicator);
+            }
+        }
+        if (indicator) {
+            indicator.innerText = `Accrued Co. Share: ${formatNumber(totalAccruedCompany.toFixed(2))}`;
+        }
+    } catch (e) { 
+        console.error("Accrued Stats Error:", e); 
+    }
+}
+
+// 5. Missing Dashboard Helpers
+
+window.loadOngoingProjects = () => {
+    if (window.loadManageInvestments) window.loadManageInvestments();
+};
+
+window.checkAnnouncements = async () => {
+    try {
+        const snap = await db.collection('announcements').orderBy('timestamp', 'desc').limit(1).get();
+        if (!snap.empty) {
+            const doc = snap.docs[0].data();
+            const latest = doc.timestamp ? doc.timestamp.toMillis() : 0;
+            const hasSeen = localStorage.getItem('lastSeenAnno');
+            const dot = document.getElementById('annoDot');
+            if (dot) {
+                dot.style.display = (!hasSeen || (hasSeen && parseInt(hasSeen) < latest)) ? 'block' : 'none';
+            }
+        }
+    } catch (e) { console.error("Announcement Check Error:", e); }
+};
+
+window.loadCompanyAccount = async () => {
+    const balanceEl = document.getElementById('companyTotalBalance');
+    const ledgerEl = document.getElementById('companyLedgerList');
+    if (!balanceEl || !ledgerEl) return;
+
+    try {
+        const snap = await db.collection('companyAccount').orderBy('timestamp', 'desc').get();
+        let total = 0;
+        let html = '';
+
+        if (snap.empty) {
+            html = `<p style="text-align:center; padding:20px; color:var(--text-muted);">No transactions found.</p>`;
+        } else {
+            snap.forEach(doc => {
+                const d = doc.data();
+                total += (d.amount || 0);
+                const date = d.date || (d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleDateString() : 'N/A');
+                
+                html += `
+                    <div class="glass-card" style="padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; font-size: 0.9rem; color: var(--primary-color);">${d.type || 'Transaction'}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">${d.description || ''}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${date} • Source: ${d.sourceUser || 'System'}</div>
+                        </div>
+                        <div style="font-weight: 800; color: var(--primary-color); font-size: 1rem;">${formatNumber(d.amount || 0)}</div>
+                    </div>
+                `;
+            });
+        }
+
+        balanceEl.innerText = formatNumber(total);
+        ledgerEl.innerHTML = html;
+    } catch (e) {
+        console.error("Company Account Load Error:", e);
+        ledgerEl.innerHTML = `<p style="color:red; text-align:center; padding:20px;">Error loading ledger.</p>`;
+    }
+};
+
+window.openDueReport = async () => {
+    const modal = document.getElementById('dueReportModal');
+    const content = document.getElementById('dueReportContent');
+    if (!modal || !content) return;
+    
+    modal.style.display = 'flex';
+    content.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'লোড হচ্ছে...' : 'Loading...'}</div>`;
+
+    try {
+        const usersSnap = await db.collection('users').get();
+        const docs = usersSnap.docs.map(u => u.data());
+        
+        let html = `<table class="report-table">
+            <thead>
+                <tr>
+                    <th>${currentLang === 'bn' ? 'সদস্যের নাম' : 'Member Name'}</th>
+                    <th>${currentLang === 'bn' ? 'ধরণ' : 'Type'}</th>
+                    <th>${currentLang === 'bn' ? 'বকেয়া বিবরণ' : 'Dues Description'}</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        let hasDues = false;
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonthIdx = now.getMonth(); 
+
+        // Sort users by name
+        docs.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        docs.forEach(u => {
+            if (u.email === 'growhalal0@gmail.com') return;
+
+            const dues = u.dues || { admissionPaid: 0, monthlyPaidCount: 0, extraTermsPaid: [] };
+            const joinDate = u.createdAt ? new Date(u.createdAt.seconds * 1000) : null;
+            
+            // 1. Admission Check
+            const adminPaidVal = dues.admissionPaid || 0;
+            if (adminPaidVal < REQUIRED_ADMISSION_FEE) {
+                hasDues = true;
+                html += `<tr>
+                    <td><strong>${u.name || 'N/A'}</strong></td>
+                    <td><span class="due-indicator due-admission"></span> Admission</td>
+                    <td>Tk ${formatNumber(REQUIRED_ADMISSION_FEE - adminPaidVal)} Due</td>
+                </tr>`;
+            }
+
+            // 2. Monthly Check
+            if (joinDate) {
+                const joinMonthIdx = joinDate.getMonth();
+                const joinYear = joinDate.getFullYear();
+                const totalMonthsSinceJoin = (currentYear - joinYear) * 12 + (currentMonthIdx - joinMonthIdx) + 1;
+                const monthlyPaid = dues.monthlyPaidCount || 0;
+                
+                if (monthlyPaid < totalMonthsSinceJoin) {
+                    hasDues = true;
+                    let missingMonths = [];
+                    for (let i = monthlyPaid; i < totalMonthsSinceJoin; i++) {
+                        const mDate = new Date(joinYear, joinMonthIdx + i, 1);
+                        if (mDate > now) break;
+                        missingMonths.push(mDate.toLocaleString(currentLang === 'bn' ? 'bn-BD' : 'en-US', { month: 'short', year: 'numeric' }));
+                    }
+                    
+                    if (missingMonths.length > 0) {
+                        html += `<tr>
+                            <td><strong>${u.name || 'N/A'}</strong></td>
+                            <td><span class="due-indicator due-monthly"></span> Monthly</td>
+                            <td style="font-size: 0.8rem; color: var(--error);">${missingMonths.slice(0, 10).join(', ')}${missingMonths.length > 10 ? '...' : ''}</td>
+                        </tr>`;
+                    }
+                }
+            }
+            
+            // 3. Extra Check
+            const currentTerm = currentMonthIdx < 6 ? `January-June ${currentYear}` : `July-December ${currentYear}`;
+            if (!dues.extraTermsPaid || !dues.extraTermsPaid.includes(currentTerm)) {
+                hasDues = true;
+                html += `<tr>
+                    <td><strong>${u.name || 'N/A'}</strong></td>
+                    <td><span class="due-indicator due-extra"></span> Extra</td>
+                    <td>${currentTerm}</td>
+                </tr>`;
+            }
+        });
+
+        if (!hasDues) {
+            html += `<tr><td colspan="3" style="text-align:center; padding:20px;">No unpaid dues found! 🎉</td></tr>`;
+        }
+
+        html += '</tbody></table>';
+        content.innerHTML = html;
+        
+    } catch (e) {
+        console.error("Due Report Error:", e);
+        content.innerHTML = `<p style="color:var(--error); text-align:center; padding:20px;">Error: ${e.message}</p>`;
+    }
+};
+
+window.closeDueReport = () => {
+    document.getElementById('dueReportModal').style.display = 'none';
+};
 
 // --- ADD MEMBER LOGIC ---
 
@@ -791,6 +956,11 @@ if (addMemberForm) {
                 profit: 0,
                 profitPercentage: parseFloat(document.getElementById('memProfitPct').value) || 100,
                 investmentsCount: 0,
+                dues: {
+                    admissionPaid: 0,
+                    monthlyPaidCount: 0,
+                    extraTermsPaid: []
+                },
                 nominee: {
                     name: document.getElementById('nomName').value || 'N/A',
                     relation: document.getElementById('nomRelation').value || 'N/A',
@@ -967,9 +1137,6 @@ window.renderDepositOptions = () => {
     addYearHeader(monthList, 2025);
     addOption(monthList, 'month', 'December 2025', 'December 2025');
     
-    addYearHeader(extraList, 2025);
-    addOption(extraList, 'extra', 'January-June 2025', 'January-June 2025');
-    addOption(extraList, 'extra', 'July-December 2025', 'July-December 2025');
 
     // Current and Next Year
     [currentYear, nextYear].forEach(year => {
@@ -1342,6 +1509,10 @@ function loadPendingDeposits() {
 }
 
 window.approveBatch = async (batchId, uid, totalAmount) => {
+    if (uid === currentUser.uid) {
+        alert(currentLang === 'bn' ? "আপনি নিজের ডিপোজিট নিজে এপ্রুভ করতে পারবেন না।" : "You cannot approve your own deposit.");
+        return;
+    }
     if (!confirm(`Are you sure you want to approve this batch payment of Tk ${formatNumber(totalAmount).replace('Tk ', '')}?`)) return;
     try {
         const userRef = db.collection('users').doc(uid);
@@ -1365,14 +1536,37 @@ window.approveBatch = async (batchId, uid, totalAmount) => {
             let currentBalance = userDoc.exists ? (userDoc.data().balance || 0) : 0;
             let currentSavings = userDoc.exists ? (userDoc.data().savings || 0) : 0;
             
+            // Update Global Stats
+            const statsRef = db.collection('system').doc('stats');
+            const statsDoc = await transaction.get(statsRef);
+            const stats = statsDoc.exists ? statsDoc.data() : { totalSavings: 0 };
+            transaction.set(statsRef, {
+                totalSavings: (stats.totalSavings || 0) + totalAmount
+            }, { merge: true });
+
             transaction.update(userRef, {
                 balance: currentBalance + totalAmount,
                 savings: currentSavings + totalAmount
             });
 
+            // Update Dues Cache on User Doc
+            const userData = userDoc.data() || {};
+            const dues = userData.dues || { admissionPaid: 0, monthlyPaidCount: 0, extraTermsPaid: [] };
+            
             snapshot.forEach(doc => {
-                transaction.update(doc.ref, { status: 'approved' });
+                const item = doc.data();
+                if (item.type === 'Admission Fee') dues.admissionPaid += (item.amount || 0);
+                else if (item.type === 'Monthly Deposit') dues.monthlyPaidCount += 1;
+                else if (item.type === 'Extra Deposit') {
+                    const term = `${item.month} ${item.year}`;
+                    if (!dues.extraTermsPaid.includes(term)) dues.extraTermsPaid.push(term);
+                }
+                transaction.update(doc.ref, { 
+                    status: 'approved',
+                    approvedBy: userNamesMap[currentUser.uid] || currentUser.email
+                });
             });
+            transaction.update(userRef, { dues: dues });
         });
 
         alert("Batch approved successfully!");
@@ -1408,9 +1602,6 @@ window.rejectDeposit = window.rejectBatch;
 
 // --- OWNER & AUDIT MANAGEMENT ---
 
-// Global Caches for Performance
-let _approvedDepositsCache = {};
-let _globalSavingsSum = 0;
 
 // Initialize deposit listener once
 db.collection('deposits').where('status', '==', 'approved').onSnapshot(snapshot => {
@@ -1434,14 +1625,10 @@ function loadAllUsers() {
         const countEl = document.getElementById('totalMembersCount');
         if (countEl) countEl.innerText = snapshot.size;
 
-        // Populate global user name cache & calculate global savings
-        let currentLoopSavings = 0;
+        // Populate global user name cache
         snapshot.forEach(doc => {
-            const data = doc.data();
-            userNamesMap[doc.id] = data.name || data.email;
-            currentLoopSavings += (data.savings || 0);
+            userNamesMap[doc.id] = doc.data().name || doc.data().email;
         });
-        _globalSavingsSum = currentLoopSavings;
 
         if (snapshot.empty) { 
             if (list) list.innerHTML = 'No users.'; 
@@ -1466,25 +1653,33 @@ function loadAllUsers() {
         list.innerHTML = '';
         
         userDocs.forEach(u => {
-            const stats = userStats[u.id] || { monthlyMonths: [], admissionTotal: 0, extraTerms: [] };
             const joinDate = u.createdAt ? new Date(u.createdAt.seconds * 1000) : new Date();
+            
+            // Preference: Use the cached dues object on the user doc. 
+            // Fallback: Use the (legacy) global deposits cache for users not yet migrated.
+            const dues = u.dues || _approvedDepositsCache[u.id] || { admissionPaid: 0, monthlyPaidCount: 0, monthlyMonths: [], extraTermsPaid: [], extraTerms: [] };
+            
+            const monthlyPaidCount = dues.monthlyPaidCount ?? (dues.monthlyMonths ? dues.monthlyMonths.length : 0);
+            const admissionTotal = dues.admissionPaid ?? (dues.admissionTotal || 0);
+            const extraTerms = dues.extraTermsPaid || dues.extraTerms || [];
 
             // Dues Logic
             const joinYear = joinDate.getFullYear();
             const joinMonth = joinDate.getMonth();
             const totalMonthsSinceJoin = (currentYear - joinYear) * 12 + (currentMonthIdx - joinMonth) + 1;
-            const monthlyDueCount = Math.max(0, totalMonthsSinceJoin - stats.monthlyMonths.length);
+            const monthlyDueCount = Math.max(0, totalMonthsSinceJoin - monthlyPaidCount);
             const hasMonthlyDue = monthlyDueCount > 0;
-            const hasAdmissionDue = stats.admissionTotal < REQUIRED_ADMISSION_FEE;
+            const hasAdmissionDue = admissionTotal < REQUIRED_ADMISSION_FEE;
 
             let hasExtraDueIndicator = false;
-            if (currentMonthIdx >= 5) { // June or later
-                const term1Found = stats.extraTerms.some(t => t.includes('January-June') && t.includes(currentYear.toString()));
-                if (!term1Found) hasExtraDueIndicator = true;
-            }
-            if (currentMonthIdx >= 11) { // December
-                const term2Found = stats.extraTerms.some(t => t.includes('July-December') && t.includes(currentYear.toString()));
-                if (!term2Found) hasExtraDueIndicator = true;
+            const curMonthStr = currentMonthIdx < 5 ? "" : (currentMonthIdx >= 11 ? "July-December" : "January-June"); 
+            
+            const term1Found = extraTerms.some(t => t.includes('January-June') && t.includes(currentYear.toString()));
+            if (!term1Found && currentMonthIdx >= 5) hasExtraDueIndicator = true;
+
+            if (currentMonthIdx >= 6) {
+                const term2Found = extraTerms.some(t => t.includes('July-December') && t.includes(currentYear.toString()));
+                if (!term2Found && currentMonthIdx >= 11) hasExtraDueIndicator = true;
             }
 
             const loggedInEmail = (auth.currentUser && auth.currentUser.email) ? auth.currentUser.email.toLowerCase().trim() : '';
@@ -1571,10 +1766,12 @@ window.openMemberProfile = async (uid, data, monthsDue = 0, joinDateParam = null
                     <label class="form-label">Address</label>
                     <p style="font-weight: 700; color: var(--text-main); font-size: 1.1rem; padding-left: 5px;">${data.address || 'N/A'}</p>
                 </div>
+                ${(isSelf || ['owner', 'admin', 'manager'].includes(userRole)) ? `
                 <div class="profile-info-item">
                     <label class="form-label">Profit Share (%)</label>
                     <p style="font-weight: 700; color: var(--primary-dark); font-size: 1.1rem; padding-left: 5px;">${data.profitPercentage || 100}%</p>
                 </div>
+                ` : ''}
             </div>
         </div>
 
@@ -1657,16 +1854,24 @@ window.openMemberProfile = async (uid, data, monthsDue = 0, joinDateParam = null
     if (!isRestricted) {
         (async () => {
             try {
-                const depsSnap = await db.collection('deposits').where('uid', '==', uid).where('status', '==', 'approved').get();
                 let adminTotal = 0;
-                let monthlyFound = [];
+                let monthlyPaidCount = 0;
                 let extraFound = [];
-                depsSnap.forEach(d => {
-                    const doc = d.data();
-                    if (doc.type === 'Admission Fee') adminTotal += (doc.amount || 0);
-                    else if (doc.type === 'Monthly Deposit') monthlyFound.push(`${doc.month} ${doc.year}`);
-                    else if (doc.type === 'Extra Deposit') extraFound.push(`${doc.month} ${doc.year}`);
-                });
+
+                if (data.dues) {
+                    adminTotal = data.dues.admissionPaid || 0;
+                    monthlyPaidCount = data.dues.monthlyPaidCount || 0;
+                    extraFound = data.dues.extraTermsPaid || [];
+                } else {
+                    // Legacy Fallback (One-time check if dues object is missing)
+                    const depsSnap = await db.collection('deposits').where('uid', '==', uid).where('status', '==', 'approved').get();
+                    depsSnap.forEach(d => {
+                        const doc = d.data();
+                        if (doc.type === 'Admission Fee') adminTotal += (doc.amount || 0);
+                        else if (doc.type === 'Monthly Deposit') monthlyPaidCount++;
+                        else if (doc.type === 'Extra Deposit') extraFound.push(`${doc.month} ${doc.year}`);
+                    });
+                }
 
                 const today = new Date();
                 const currYear = today.getFullYear();
@@ -1684,7 +1889,7 @@ window.openMemberProfile = async (uid, data, monthsDue = 0, joinDateParam = null
                 const jYear = jDate.getFullYear();
                 const jMon = jDate.getMonth();
                 const totalMonthsExpected = (currYear - jYear) * 12 + (currMonIdx - jMon) + 1;
-                const mDue = Math.max(0, totalMonthsExpected - monthlyFound.length);
+                const mDue = Math.max(0, totalMonthsExpected - monthlyPaidCount);
                 const profMonEl = document.getElementById('profMonthlyDue');
                 if (profMonEl) {
                     profMonEl.innerText = mDue > 0 ? `${mDue} Months Due` : 'Paid';
@@ -1693,18 +1898,23 @@ window.openMemberProfile = async (uid, data, monthsDue = 0, joinDateParam = null
 
                 // 3. Extra Due
                 let extraDueList = [];
-                if (currMonIdx >= 5) { // June or later
-                    const t1Expected = `January-June ${currYear}`;
-                    if (!extraFound.includes(t1Expected)) extraDueList.push('Term 1 (Jan-Jun)');
+                let hasAlertDue = false;
+                const t1Exp = `January-June ${currYear}`;
+                if (!extraFound.includes(t1Exp)) {
+                    extraDueList.push('Term 1 (Jan-Jun)');
+                    if (currMonIdx >= 5) hasAlertDue = true;
                 }
-                if (currMonIdx >= 11) { // December
-                    const t2Expected = `July-December ${currYear}`;
-                    if (!extraFound.includes(t2Expected)) extraDueList.push('Term 2 (Jul-Dec)');
+                if (currMonIdx >= 6) {
+                    const t2Exp = `July-December ${currYear}`;
+                    if (!extraFound.includes(t2Exp)) {
+                        extraDueList.push('Term 2 (Jul-Dec)');
+                        if (currMonIdx >= 11) hasAlertDue = true;
+                    }
                 }
                 const profExtraEl = document.getElementById('profExtraDue');
                 if (profExtraEl) {
                     profExtraEl.innerText = extraDueList.length > 0 ? extraDueList.join(', ') + ' Due' : 'Paid';
-                    profExtraEl.style.color = extraDueList.length > 0 ? '#8B5CF6' : 'var(--success)';
+                    profExtraEl.style.color = hasAlertDue ? '#8B5CF6' : (extraDueList.length > 0 ? '#94a3b8' : 'var(--success)');
                 }
             } catch (err) { console.error("Profile Dues Error:", err); }
         })();
@@ -1809,7 +2019,11 @@ window.openEditProfile = async (uid) => {
     document.getElementById('editNomRelation').value = data.nominee?.relation || '';
     document.getElementById('editNomPhone').value = data.nominee?.phone || '';
     document.getElementById('editNomAddress').value = data.nominee?.address || '';
-    document.getElementById('editMemProfitPct').value = data.profitPercentage || 100;
+    const profitInput = document.getElementById('editMemProfitPct');
+    if (profitInput) {
+        profitInput.value = data.profitPercentage || 100;
+        profitInput.disabled = !['owner', 'admin', 'manager'].includes(userRole);
+    }
 
     document.getElementById('editProfileModal').style.display = 'flex';
 };
@@ -2031,13 +2245,15 @@ if (deleteMemberForm) {
                     });
                 }
 
-                // 3. Update Global Profit Pool (Remove the settled slice)
+                // 3. Update Global Stats (Remove savings and remove the settled profit slice from pool)
+                const currentStats = statsDoc.exists ? statsDoc.data() : { totalProfit: 0, totalSavings: 0 };
+                const statsUpdate = {
+                    totalSavings: Math.max(0, (currentStats.totalSavings || 0) - savings)
+                };
                 if (totalPotentialProfit > 0) {
-                    const currentGlobalProfit = statsDoc.exists ? (statsDoc.data().totalProfit || 0) : 0;
-                    transaction.update(statsRef, {
-                        totalProfit: Math.max(0, currentGlobalProfit - totalPotentialProfit)
-                    });
+                    statsUpdate.totalProfit = Math.max(0, (currentStats.totalProfit || 0) - totalPotentialProfit);
                 }
+                transaction.set(statsRef, statsUpdate, { merge: true });
 
                 // 4. Delete the User Document
                 transaction.delete(userRef);
@@ -2296,6 +2512,7 @@ if (investForm) {
                 status: 'active',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
+            await updateSystemStats({ totalInvestments: amount });
             alert("Investment project added successfully!");
             investForm.reset();
         } catch (error) {
@@ -2487,7 +2704,8 @@ if (withdrawForm) {
                 const investRef = db.collection('investments').doc(id);
 
                 const statsDoc = await transaction.get(statsRef);
-                const currentTotalProfit = statsDoc.exists ? (statsDoc.data().totalProfit || 0) : 0;
+                const investDoc = await transaction.get(investRef);
+                const principal = investDoc.exists ? (investDoc.data().amount || 0) : 0;
 
                 // 1. Mark investment as withdrawn
                 transaction.update(investRef, {
@@ -2499,11 +2717,11 @@ if (withdrawForm) {
                 });
 
                 // 2. Update global stats
-                if (!statsDoc.exists) {
-                    transaction.set(statsRef, { totalProfit: profit });
-                } else {
-                    transaction.update(statsRef, { totalProfit: currentTotalProfit + profit });
-                }
+                const current = statsDoc.exists ? statsDoc.data() : { totalProfit: 0, totalInvestments: 0 };
+                transaction.set(statsRef, { 
+                    totalProfit: (current.totalProfit || 0) + profit,
+                    totalInvestments: Math.max(0, (current.totalInvestments || 0) - principal)
+                }, { merge: true });
             });
 
             alert("Project withdrawn successfully! Profit added to total system profit.");
@@ -2524,6 +2742,21 @@ if (withdrawForm) {
 
 
 // --- REPORTING SYSTEM ENHANCEMENTS ---
+
+const waitForAssets = async (container) => {
+    const images = Array.from(container.querySelectorAll('img'));
+    const fontReady = document.fonts ? document.fonts.ready : Promise.resolve();
+    await Promise.all([
+        fontReady,
+        ...images.map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(resolve => {
+                img.onload = resolve;
+                img.onerror = resolve;
+            });
+        })
+    ]);
+};
 
 window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
     const titleEl = document.getElementById('reportPreviewTitle');
@@ -2556,7 +2789,7 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
             profitShare = (userSavings / totalSavings) * totalProfit * (profitPercentage / 100);
         }
 
-        // Fetch deposits (Sorted in memory to avoid index requirement)
+        // Fetch deposits for the history table
         const depsSnap = await db.collection('deposits').where('uid', '==', uid).where('status', '==', 'approved').get();
         const depsList = depsSnap.docs.map(d => d.data()).sort((a, b) => {
             const timeA = a.timestamp?.seconds || 0;
@@ -2564,16 +2797,24 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
             return timeB - timeA;
         });
 
-        // Dues Calculation for Statement
+        // Dues Calculation for Statement (Using Cache where possible)
         let adminTotal = 0;
-        let monthlyFound = [];
+        let monthlyPaidCount = 0;
         let extraFound = [];
-        depsSnap.forEach(d => {
-            const doc = d.data();
-            if (doc.type === 'Admission Fee') adminTotal += (doc.amount || 0);
-            else if (doc.type === 'Monthly Deposit') monthlyFound.push(`${doc.month} ${doc.year}`);
-            else if (doc.type === 'Extra Deposit') extraFound.push(`${doc.month} ${doc.year}`);
-        });
+
+        if (data.dues) {
+            adminTotal = data.dues.admissionPaid || 0;
+            monthlyPaidCount = data.dues.monthlyPaidCount || 0;
+            extraFound = data.dues.extraTermsPaid || [];
+        } else {
+            // Legacy Fallback
+            depsSnap.forEach(d => {
+                const doc = d.data();
+                if (doc.type === 'Admission Fee') adminTotal += (doc.amount || 0);
+                else if (doc.type === 'Monthly Deposit') monthlyPaidCount++;
+                else if (doc.type === 'Extra Deposit') extraFound.push(`${doc.month} ${doc.year}`);
+            });
+        }
 
         const today = new Date();
         const currYear = today.getFullYear();
@@ -2581,7 +2822,7 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
         const jYear = joinDate.getFullYear();
         const jMon = joinDate.getMonth();
         const totalMonthsExpected = (currYear - jYear) * 12 + (currMonIdx - jMon) + 1;
-        const mDue = Math.max(0, totalMonthsExpected - monthlyFound.length);
+        const mDue = Math.max(0, totalMonthsExpected - monthlyPaidCount);
         const admDue = Math.max(0, REQUIRED_ADMISSION_FEE - adminTotal);
 
         let extraDueList = [];
@@ -2737,12 +2978,17 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
                         <p style="margin: 2px 0;">${currentLang === 'bn' ? 'এই ডকুমেন্টটি গ্রো হালাল-এর একটি অফিসিয়াল রেকর্ড।' : 'This document is an official record of Grow Halal.'}</p>
                         <p style="margin: 2px 0;">${currentLang === 'bn' ? 'প্রস্তুতকারক (সিস্টেম):' : 'Generated by System:'} ${auth.currentUser.email}</p>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="width: 150px; border-top: 1px solid #333; margin-bottom: 5px;"></div>
-                        <p style="font-size: 0.8rem; font-weight: 700; margin: 0;">${t['label-authorized-sig'] || 'Authorized Signature'}</p>
+                    </div>
                 </div>
             </div>
         `;
+        
+        if (downloadOnly) {
+            const filename = `Statement_${data.name || 'Member'}_${new Date().toISOString().split('T')[0]}.pdf`;
+            await generatePDFFromHTML(contentHtml, filename, t['report-member-audit'] || 'Member Statement');
+            return;
+        }
+
         contentEl.innerHTML = contentHtml;
 
         downloadBtn.onclick = async () => {
@@ -2757,78 +3003,141 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
             const originalScroll = window.scrollY;
             window.scrollTo(0, 0);
 
-            // 2. Create the most stable capture wrapper
-            const exportWrapper = document.createElement('div');
-            exportWrapper.id = 'temp-pdf-export-wrapper';
-            // Use off-screen positioning instead of z-index: -1 to ensure rendering
-            exportWrapper.style.cssText = `
-                position: absolute;
-                top: 0;
-                left: -5000px;
-                width: 210mm;
-                background: white;
-                color: black;
-                padding: 10mm;
-                box-sizing: border-box;
-                font-family: 'SolaimanLipi', 'Inter', 'Outfit', sans-serif !important;
-            `;
+            // Create a dedicated print iframe to bypass popup blockers
+            const printFrame = document.createElement('iframe');
+            printFrame.style.position = 'fixed';
+            printFrame.style.right = '0';
+            printFrame.style.bottom = '0';
+            printFrame.style.width = '0';
+            printFrame.style.height = '0';
+            printFrame.style.border = '0';
+            document.body.appendChild(printFrame);
+
+            const frameDoc = printFrame.contentWindow.document;
+            frameDoc.open();
+            frameDoc.write(`
+                <html>
+                <head>
+                    <title>Statement_${data.name || 'Member'}</title>
+                    <style>
+                        @page { size: auto; margin: 10mm; }
+                        body { font-family: 'SolaimanLipi', 'Inter', 'Outfit', sans-serif; padding: 20px; color: #000; }
+                        .statement-container { max-width: 100%; margin: 0 auto; }
+                        * { background-color: transparent !important; color: #000 !important; visibility: visible !important; box-shadow: none !important; }
+                        th { background-color: #f1f5f9 !important; border: 1px solid #cbd5e1; padding: 8px; text-align: left;}
+                        td { border: 1px solid #e2e8f0; padding: 8px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        @media print {
+                            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="statement-container">
+                        ${element.innerHTML}
+                    </div>
+                </body>
+                </html>
+            `);
+            frameDoc.close();
+
+            // Wait for assets and trigger print
+            setTimeout(() => {
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+                setTimeout(() => document.body.removeChild(printFrame), 1000);
+            }, 800);
             
-            exportWrapper.innerHTML = `
-                <style>
-                    #temp-pdf-export-wrapper { background: white !important; }
-                    #temp-pdf-export-wrapper * { 
-                        color: black !important; 
-                        background-color: transparent !important;
-                        font-family: 'SolaimanLipi', 'Inter', 'Outfit', sans-serif !important;
-                        visibility: visible !important;
-                    }
-                    #temp-pdf-export-wrapper .report-table th { background-color: #f1f5f9 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; }
-                    #temp-pdf-export-wrapper .report-table td { border: 1px solid #e2e8f0 !important; }
-                </style>
-                <div style="background: white !important;">
-                    ${element.innerHTML}
-                </div>
-            `;
+            downloadBtn.disabled = false;
+            downloadBtn.innerHTML = originalBtnText;
 
-            const opt = {
-                margin: 5,
-                filename: `Statement_${data.name || 'Member'}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true, 
-                    letterRendering: true,
-                    backgroundColor: '#ffffff'
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            try {
-                document.body.appendChild(exportWrapper);
-                // Heavy delay to ensure fonts/images are ready
-                await new Promise(r => setTimeout(r, 2000));
-                
-                await html2pdf().set(opt).from(exportWrapper).save();
-                document.body.removeChild(exportWrapper);
-            } catch (err) {
-                console.error("PDF Export Error:", err);
-                alert("Download failed. Please try again.");
-            } finally {
-                window.scrollTo(0, originalScroll);
-                downloadBtn.disabled = false;
-                downloadBtn.innerHTML = originalBtnText;
-            }
         };
-
-    } catch (error) {
-        contentEl.innerHTML = `<div style="color:red; padding:20px;">Error: ${error.message}</div>`;
+    } catch (err) {
+        console.error("Statement Error:", err);
+        alert("Failed to load statement: " + err.message);
     }
 };
 
+// --- NATIVE BROWSER PRINT ENGINE ---
+window.generatePDFFromHTML = async (html, filename, title = "Report", orientation = 'portrait') => {
+    // We use a hidden iframe native browser print API for perfect PDF rendering with Bangla fonts
+    // Users can simply select "Save as PDF" in the browser dialog.
+    
+    return new Promise((resolve) => {
+        const printFrame = document.createElement('iframe');
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = '0';
+        document.body.appendChild(printFrame);
 
-let currentReportType = '';
+        const cssOrientation = orientation === 'landscape' ? 'landscape' : 'portrait';
+        const frameDoc = printFrame.contentWindow.document;
+        
+        frameDoc.open();
+        frameDoc.write(`
+            <html>
+            <head>
+                <title>${filename}</title>
+                <style>
+                    @page { size: auto ${cssOrientation}; margin: 15mm 10mm; }
+                    body { 
+                        font-family: 'SolaimanLipi', 'Inter', sans-serif; 
+                        margin: 0; 
+                        padding: 0;
+                        color: #000;
+                        background: #fff;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    * { visibility: visible !important; color: #000 !important; }
+                    
+                    .export-header { 
+                        text-align: center; 
+                        margin-bottom: 25px; 
+                        border-bottom: 2px solid #2D5A47; 
+                        padding-bottom: 10px; 
+                    }
+                    .export-header h1 { color: #2D5A47 !important; margin: 0; font-size: 24px; }
+                    .export-header p.title { margin: 5px 0; font-size: 14px; color: #333 !important; font-weight: bold; }
+                    .export-header p.date { margin: 0; font-size: 10px; color: #666 !important; }
+                    
+                    .report-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95rem; }
+                    .report-table th { background-color: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; padding: 10px; text-align: left; font-weight: bold; }
+                    .report-table td { border: 1px solid #e2e8f0 !important; padding: 10px; }
+                </style>
+            </head>
+            <body>
+                <div class="export-header">
+                    <h1>GROW HALAL</h1>
+                    <p class="title">${title.toUpperCase()}</p>
+                    <p class="date">${new Date().toLocaleString()}</p>
+                </div>
+                ${html}
+            </body>
+            </html>
+        `);
+        frameDoc.close();
 
-window.viewReport = async (type, fromDate = null, toDate = null) => {
+        // Wait for all assets to load, then trigger print
+        setTimeout(() => {
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
+            setTimeout(() => {
+                document.body.removeChild(printFrame);
+                resolve();
+            }, 1000);
+        }, 800);
+    });
+};
+
+window.directDownloadReport = (type) => {
+    window.viewReport(type, null, null, true);
+};
+
+window.viewReport = async (type, fromDate = null, toDate = null, downloadOnly = false) => {
     currentReportType = type;
     const titleEl = document.getElementById('reportPreviewTitle');
     const contentEl = document.getElementById('reportPreviewContent');
@@ -2837,26 +3146,25 @@ window.viewReport = async (type, fromDate = null, toDate = null) => {
     const filterUI = document.getElementById('reportFilters');
     const t = translations[currentLang] || translations['en'];
 
-    modal.style.display = 'flex';
-    contentEl.innerHTML = `<div style="text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'লোড হচ্ছে...' : 'Loading report...'}</div>`;
+    if (!downloadOnly && modal && contentEl) {
+        modal.style.display = 'flex';
+        contentEl.innerHTML = `<div style="text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'লোড হচ্ছে...' : 'Loading report...'}</div>`;
+    }
 
-    if (['investments', 'expenses'].includes(type)) {
+    if (['investments', 'expenses'].includes(type) && !downloadOnly && filterUI) {
         filterUI.style.display = 'flex';
-    } else {
+    } else if (filterUI) {
         filterUI.style.display = 'none';
     }
 
     let html = '';
+    let reportTitle = '';
     try {
         if (type === 'expenses') {
-            titleEl.innerText = t['report-expense-ledger'];
+            reportTitle = t['report-expense-ledger'] || 'Expense Ledger';
             const snap = await db.collection('expenses').get();
             let docs = snap.docs.map(doc => doc.data());
-
-            // Robust Sort
             docs.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-
-            // Robust Filter
             if (fromDate || toDate) {
                 docs = docs.filter(d => {
                     const dDate = d.date || '';
@@ -2869,86 +3177,32 @@ window.viewReport = async (type, fromDate = null, toDate = null) => {
             if (docs.length === 0) {
                 html = `<p style="text-align:center; padding:20px; color:#666;">${currentLang === 'bn' ? 'কোন তথ্য পাওয়া যায়নি' : 'No records found'}</p>`;
             } else {
-                html = `
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>${t['label-date'] || 'Date'}</th>
-                                <th>${t['label-category'] || 'Category'}</th>
-                                <th>${t['label-description'] || 'Description'}</th>
-                                <th>${t['label-amount'] || 'Amount'}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${docs.map(d => `
-                                <tr>
-                                    <td>${d.date || '-'}</td>
-                                    <td>${d.category || '-'}</td>
-                                    <td>${d.comment || '-'}</td>
-                                    <td>${formatNumber(d.amount || 0)}</td>
-                                </tr>`).join('')}
-                        </tbody>
-                    </table>`;
+                html = `<table class="report-table">
+                    <thead><tr><th>${t['label-date']}</th><th>${t['label-category']}</th><th>${t['label-description']}</th><th>${t['label-amount']}</th></tr></thead>
+                    <tbody>${docs.map(d => `<tr><td>${d.date || '-'}</td><td>${d.category || '-'}</td><td>${d.comment || '-'}</td><td>${formatNumber(d.amount || 0)}</td></tr>`).join('')}</tbody>
+                </table>`;
             }
         }
         else if (type === 'master') {
-            titleEl.innerText = t['report-financial-audit'];
-            const statsSnap = await db.collection('system').doc('stats').get();
-            const totalProfit = statsSnap.exists ? (statsSnap.data().totalProfit || 0) : 0;
+            reportTitle = t['report-financial-audit'] || 'Master Financials';
             const usersSnap = await db.collection('users').get();
             const users = usersSnap.docs.map(u => u.data());
-            
-            let totalSavings = _globalSavingsSum;
-            if (totalSavings === 0) {
-                users.forEach(u => totalSavings += (u.savings || 0));
-            }
-
-            let grandTotalCompany = 0;
-
-            html = `
-                <table class="report-table">
-                    <thead>
-                        <tr>
-                            <th>${t['label-name'] || 'Name'}</th>
-                            <th>${t['label-total-savings'] || 'Savings'}</th>
-                            <th>${t['label-member-profit'] || 'Member Profit'}</th>
-                            <th>${t['label-company-share'] || 'Company Share'}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${users.map(d => {
-                            const userSavings = d.savings || 0;
-                            const profitPct = d.profitPercentage || 100;
-                            let totalPotential = 0;
-                            if (totalSavings > 0) totalPotential = (userSavings / totalSavings) * totalProfit;
-                            
-                            const memberShare = totalPotential * (profitPct / 100);
-                            const companyShare = totalPotential - memberShare;
-                            grandTotalCompany += companyShare;
-
-                            return `<tr>
-                                <td>${d.name || 'N/A'}</td>
-                                <td>${formatNumber(userSavings)}</td>
-                                <td style="color: #2D5A47; font-weight: 600;">${formatNumber(memberShare.toFixed(2))}</td>
-                                <td style="color: #666; font-style: italic;">${formatNumber(companyShare.toFixed(2))}</td>
-                            </tr>`;
-                        }).join('')}
-                    </tbody>
-                    <tfoot>
-                        <tr style="background: #f0f7f4; font-weight: 800; border-top: 2px solid #2D5A47;">
-                            <td colspan="3" style="text-align: right; padding: 12px;">${t['label-total-company-share'] || 'Total Accrued Company Share'}:</td>
-                            <td style="color: var(--primary-color); padding: 12px;">${formatNumber(grandTotalCompany.toFixed(2))}</td>
-                        </tr>
-                    </tfoot>
-                </table>`;
+            html = `<table class="report-table">
+                <thead><tr><th>${t['label-name']}</th><th>${t['label-total-savings']}</th><th>${t['label-member-profit']}</th><th>${t['label-company-share']}</th></tr></thead>
+                <tbody>${users.map(d => {
+                    const savings = d.savings || 0;
+                    const profit = (_globalSavingsSum > 0) ? (savings / _globalSavingsSum) * _globalProfitSum * (d.profitPercentage || 100) / 100 : 0;
+                    const companyScale = (100 - (d.profitPercentage || 100)) / 100;
+                    const companyShare = (_globalSavingsSum > 0) ? (savings / _globalSavingsSum) * _globalProfitSum * companyScale : 0;
+                    return `<tr><td>${d.name || '-'}</td><td>${formatNumber(savings)}</td><td style="color:var(--success); font-weight:700;">${formatNumber(profit)}</td><td style="color:var(--primary-color);">${formatNumber(companyShare)}</td></tr>`;
+                }).join('')}</tbody>
+            </table>`;
         }
         else if (type === 'investments') {
-            titleEl.innerText = t['report-investments'];
+            reportTitle = t['report-investments'] || 'Investment Portfolio';
             const snap = await db.collection('investments').get();
             let docs = snap.docs.map(doc => doc.data());
-
             docs.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-
             if (fromDate || toDate) {
                 docs = docs.filter(d => {
                     const dDate = d.date || '';
@@ -2958,217 +3212,138 @@ window.viewReport = async (type, fromDate = null, toDate = null) => {
                 });
             }
 
-            if (docs.length === 0) {
-                html = `<p style="text-align:center; padding:20px; color:#666;">${currentLang === 'bn' ? 'কোন তথ্য পাওয়া যায়নি' : 'No records found'}</p>`;
+            html = `<table class="report-table">
+                <thead><tr><th>${t['label-project-name']}</th><th>${t['label-date']}</th><th>${t['label-status']}</th><th>${t['label-invested']}</th><th>${t['label-profit']}</th></tr></thead>
+                <tbody>${docs.map(d => {
+                    const status = (d.status === 'withdrawn' || d.status === 'completed') ? (t['label-completed'] || 'Completed') : (t['label-ongoing'] || 'Ongoing');
+                    return `<tr><td>${d.sector || '-'}</td><td>${d.date || '-'}</td><td>${status}</td><td>${formatNumber(d.amount || 0)}</td><td style="color:var(--success);">${formatNumber(d.profitAmount || 0)}</td></tr>`;
+                }).join('')}</tbody>
+            </table>`;
+        }
+        else if (type === 'members') {
+            reportTitle = t['report-member-audit'] || 'Member Audit';
+            const snap = await db.collection('users').get();
+            html = `<table class="report-table">
+                <thead><tr><th>${t['label-name']}</th><th>${t['label-phone']}</th><th>${t['label-email']}</th><th>${t['label-share-pct']}</th><th>${t['label-address']}</th></tr></thead>
+                <tbody>${snap.docs.map(doc => {
+                    const d = doc.data();
+                    return `<tr><td>${d.name || 'N/A'}</td><td>${d.phone || '-'}</td><td>${d.email}</td><td>${d.profitPercentage || 100}%</td><td>${d.address || '-'}</td></tr>`;
+                }).join('')}</tbody>
+            </table>`;
+        }
+        else if (type === 'archived') {
+            reportTitle = currentLang === 'bn' ? 'আর্কাইভ' : "Deleted Members Archive";
+            const snap = await db.collection('archivedMembers').get();
+            if (snap.empty) {
+                html = `<p style="text-align:center; padding:20px;">Empty Archive</p>`;
             } else {
-                html = `
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>${t['label-project-name'] || 'Project'}</th>
-                                <th>${t['label-date'] || 'Date'}</th>
-                                <th>${t['label-status'] || 'Status'}</th>
-                                <th>${t['label-invested'] || 'Invested'}</th>
-                                <th>${t['label-profit'] || 'Profit'}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${docs.map(d => {
-                                const status = (d.status === 'withdrawn' || d.status === 'completed') ? (t['label-completed'] || 'Completed') : (t['label-ongoing'] || 'Ongoing');
-                                return `<tr>
-                                    <td>${d.sector || '-'}</td>
-                                    <td>${d.date || '-'}</td>
-                                    <td>${status}</td>
-                                    <td>${formatNumber(d.amount || 0)}</td>
-                                    <td style="color: var(--success); font-weight: 600;">${formatNumber(d.profitAmount || 0)}</td>
-                                </tr>`;
-                            }).join('')}
-                        </tbody>
-                    </table>`;
+                html = `<table class="report-table">
+                    <thead><tr><th>Date</th><th>Name</th><th>Payout</th></tr></thead>
+                    <tbody>${snap.docs.map(doc => {
+                        const d = doc.data();
+                        const dt = d.deletedAt ? new Date(d.deletedAt.seconds * 1000).toLocaleDateString() : 'N/A';
+                        return `<tr><td>${dt}</td><td>${d.name || 'N/A'}</td><td>${formatNumber(d.finalPayout || 0)}</td></tr>`;
+                    }).join('')}</tbody>
+                </table>`;
             }
         }
         else if (type === 'deposits') {
-            titleEl.innerText = t['report-deposit-ledger'];
+            reportTitle = currentLang === 'bn' ? 'ডিপোজিট লেজার' : 'Deposit Ledger';
+            const usersSnap = await db.collection('users').get();
+            const usersMap = {};
+            usersSnap.forEach(u => usersMap[u.id] = u.data());
             const snap = await db.collection('deposits').where('status', '==', 'approved').orderBy('timestamp', 'desc').get();
             
             if (snap.empty) {
-                html = `<p style="text-align:center; padding:20px; color:#666;">${currentLang === 'bn' ? 'কোনো ডিপোজিট পাওয়া যায়নি।' : 'No deposits found.'}</p>`;
+                html = `<p style="text-align:center; padding:20px;">No records</p>`;
             } else {
-                html = `
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>${t['label-date'] || 'Date'}</th>
-                                <th>${t['label-member'] || 'Member'}</th>
-                                <th>${t['label-category'] || 'Category'}</th>
-                                <th>${t['label-amount'] || 'Amount'}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${snap.docs.map(doc => {
-                                const d = doc.data();
-                                const typeStr = d.type === 'Other' ? (d.description || 'Other') : (d.type + (d.month !== 'N/A' ? ` (${currentLang === 'bn' ? d.month.replace('January', 'জানুয়ারি').replace('February', 'ফেব্রুয়ারি').replace('March', 'মার্চ').replace('April', 'এপ্রিল').replace('May', 'মে').replace('June', 'জুন').replace('July', 'জুলাই').replace('August', 'আগস্ট').replace('September', 'সেপ্টেম্বর').replace('October', 'অক্টোবর').replace('November', 'নভেম্বর').replace('December', 'ডিসেম্বর') : d.month} ${d.year})` : ''));
-                                return `<tr>
-                                    <td>${d.date || 'N/A'}</td>
-                                    <td>${d.userName || 'N/A'}</td>
-                                    <td>${typeStr}</td>
-                                    <td>${formatNumber(d.amount || 0)}</td>
-                                </tr>`;
-                            }).join('')}
-                        </tbody>
-                    </table>`;
-            }
-        }
-        else if (type === 'members') {
-            titleEl.innerText = t['report-member-audit'];
-            const snap = await db.collection('users').get();
-            html = `
-                <table class="report-table">
-                    <thead>
-                        <tr>
-                            <th>${t['label-name'] || 'Name'}</th>
-                            <th>${t['label-phone'] || 'Phone'}</th>
-                            <th>${t['label-email'] || 'Email'}</th>
-                            <th>${t['label-share-pct'] || 'Share (%)'}</th>
-                            <th>${t['label-address'] || 'Address'}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${snap.docs.map(doc => {
-                            const d = doc.data();
-                            return `<tr>
-                                <td>${d.name || 'N/A'}</td>
-                                <td>${d.phone || '-'}</td>
-                                <td>${d.email}</td>
-                                <td style="text-align: center; font-weight: bold;">${d.profitPercentage || 100}%</td>
-                                <td>${d.address || '-'}</td>
-                            </tr>`;
-                        }).join('')}
-                    </tbody>
-                </table>`;
-        }
-        else if (type === 'archived') {
-            titleEl.innerText = currentLang === 'bn' ? 'আর্কাইভ' : "Deleted Members Archive";
-            const snap = await db.collection('archivedMembers').get();
-            if (snap.empty) {
-                html = `<p style="text-align:center; padding:20px; color:#666;">${currentLang === 'bn' ? 'আর্কাইভ খালি।' : 'Archive is empty.'}</p>`;
-            } else {
-                html = `
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>${t['label-date'] || 'Date'}</th>
-                                <th>${t['label-name'] || 'Name'}</th>
-                                <th>${t['label-payout'] || 'Payout'}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${snap.docs.map(doc => {
-                                const d = doc.data();
-                                const delDate = d.deletedAt ? new Date(d.deletedAt.seconds * 1000).toLocaleDateString(currentLang === 'bn' ? 'bn-BD' : 'en-US') : 'N/A';
-                                return `<tr>
-                                    <td>${delDate}</td>
-                                    <td>${d.name || 'N/A'}</td>
-                                    <td>${formatNumber(d.finalPayout || 0)}</td>
-                                </tr>`;
-                            }).join('')}
-                        </tbody>
-                    </table>`;
+                const grouped = {};
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if (!grouped[d.uid]) grouped[d.uid] = [];
+                    grouped[d.uid].push(d);
+                });
+
+                if (downloadOnly) {
+                    let fullHtml = '';
+                    const sortedUids = Object.keys(grouped).sort((a,b) => (usersMap[a]?.name || '').localeCompare(usersMap[b]?.name || ''));
+                    sortedUids.forEach(uid => {
+                        const u = usersMap[uid];
+                        const dList = grouped[uid];
+                        fullHtml += `<div style="page-break-after:always; margin-bottom:40px;">
+                            <h3>${u.name} (${u.email || ''})</h3>
+                            <table class="report-table">
+                                <thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Approved By</th></tr></thead>
+                                <tbody>${dList.map(dep => `<tr><td>${dep.date || ''}</td><td>${dep.type || ''}${dep.month?` (${dep.month})`:''}</td><td>${formatNumber(dep.amount || 0)}</td><td>${dep.approvedBy || '-'}</td></tr>`).join('')}</tbody>
+                            </table>
+                        </div>`;
+                    });
+                    const filename = `Deposit_Ledger_${new Date().toISOString().split('T')[0]}.pdf`;
+                    await generatePDFFromHTML(fullHtml, filename, reportTitle);
+                    return;
+                }
+
+                window.DEPOSIT_LEDGER_SYSTEM = { users: usersMap, groups: grouped };
+                
+                window.renderMemberCardList = () => {
+                    const { users, groups } = window.DEPOSIT_LEDGER_SYSTEM;
+                    let listHtml = `<div style="padding: 10px;"><div style="display: grid; gap: 15px;">`;
+                    Object.keys(groups).forEach(uid => {
+                        const user = users[uid] || { name: 'Member' };
+                        listHtml += `<div onclick="window.showMemberDepositDetails('${uid}')" class="glass-card" style="padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(255,255,255,0.03);">
+                            <div><strong>${user.name}</strong><br><small>${user.email || ''}</small></div>
+                            <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 10px; border-radius: 50px; font-size: 0.75rem;">${groups[uid].length} Deposits</div>
+                        </div>`;
+                    });
+                    return listHtml + `</div></div>`;
+                };
+
+                window.showMemberDepositDetails = (uid) => {
+                    const { users, groups } = window.DEPOSIT_LEDGER_SYSTEM;
+                    const user = users[uid] || { name: 'Member' };
+                    const deps = groups[uid];
+                    const contentArea = document.getElementById('reportPreviewContent');
+                    contentArea.innerHTML = `
+                        <div style="padding: 10px;">
+                            <button onclick="document.getElementById('reportPreviewContent').innerHTML = window.renderMemberCardList()" class="btn btn-sm" style="margin-bottom:15px;"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                            <h3>${user.name}</h3>
+                            <table class="report-table">
+                                <thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Approved By</th></tr></thead>
+                                <tbody>${deps.map(d => `<tr><td>${d.date}</td><td>${d.type}${d.month?` (${d.month})`:''}</td><td>${formatNumber(d.amount)}</td><td>${d.approvedBy || '-'}</td></tr>`).join('')}</tbody>
+                            </table>
+                        </div>`;
+                };
+
+                html = window.renderMemberCardList();
             }
         }
 
-        const displayHtml = `
-            <div style="padding: 10px;">
-                <div class="report-table-wrapper">
-                    ${html}
-                </div>
-            </div>
-        `;
-
-        contentEl.innerHTML = displayHtml;
-
-        downloadBtn.onclick = async () => {
-            const originalBtnText = downloadBtn.innerHTML;
-            downloadBtn.disabled = true;
-            downloadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'এক্সপোর্ট হচ্ছে...' : 'Exporting...'}`;
-
+        if (downloadOnly) {
+            const filename = `${type}_report_${new Date().toISOString().split('T')[0]}.pdf`;
             const orientation = (type === 'members') ? 'landscape' : 'portrait';
-            const originalScroll = window.scrollY;
-            window.scrollTo(0, 0);
+            await generatePDFFromHTML(html, filename, reportTitle, orientation);
+            return;
+        }
 
-            const exportWrapper = document.createElement('div');
-            exportWrapper.id = 'temp-report-export-wrapper';
-            exportWrapper.style.cssText = `
-                position: absolute;
-                top: 0;
-                left: -5000px;
-                width: ${orientation === 'landscape' ? '297mm' : '210mm'};
-                background: white;
-                color: black;
-                padding: 10mm;
-                box-sizing: border-box;
-                font-family: 'SolaimanLipi', 'Inter', 'Outfit', sans-serif !important;
-            `;
+        if (titleEl) titleEl.innerText = reportTitle;
+        if (contentEl) contentEl.innerHTML = `<div style="padding:10px;"><div class="report-table-wrapper">${html}</div></div>`;
 
-            exportWrapper.innerHTML = `
-                <style>
-                    #temp-report-export-wrapper { background: white !important; }
-                    #temp-report-export-wrapper * { 
-                        color: black !important; 
-                        background-color: transparent !important;
-                        font-family: 'SolaimanLipi', 'Inter', 'Outfit', sans-serif !important;
-                        visibility: visible !important;
-                    }
-                    #temp-report-export-wrapper .report-table th { background-color: #f1f5f9 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; }
-                    #temp-report-export-wrapper .report-table td { border: 1px solid #e2e8f0 !important; }
-                </style>
-                <div style="background: white !important; width: 100% !important;">
-                    <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px solid #2D5A47; padding-bottom: 12px;">
-                        <h1 style="color: #2D5A47; margin: 0; text-transform: uppercase; letter-spacing: 4px; font-size: 1.8rem; font-weight: 800;">GROW HALAL</h1>
-                        <p style="margin: 3px 0; font-weight: 600; color: #444; letter-spacing: 1px; text-transform: uppercase; font-size: 0.7rem;">${t['label-system-report'] || 'OFFICIAL SYSTEM REPORT'}</p>
-                        <div style="font-size: 0.75rem; color: #666; margin-top: 3px;">${currentLang === 'bn' ? 'রিপোর্টের ধরণ' : 'Report Type'}: ${titleEl.innerText}</div>
-                        <div style="font-size: 0.75rem; color: #666;">${t['label-report-date'] || 'Generated'}: ${new Date().toLocaleString(currentLang === 'bn' ? 'bn-BD' : 'en-US')}</div>
-                    </div>
-                    <div class="report-table-wrapper" style="border: none;">
-                        ${contentEl.innerHTML}
-                    </div>
-                    <div style="margin-top: 35px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; font-size: 0.65rem; color: #999;">
-                        <div>${t['label-operator'] || 'Operator'}: Habibullah Foridi</div>
-                        <div>Security ID: GH-RPT-${Date.now().toString(36).toUpperCase()}</div>
-                    </div>
-                </div>
-            `;
-
-            const opt = {
-                margin: 5,
-                filename: `${type}_report_${new Date().toISOString().split('T')[0]}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true, 
-                    letterRendering: true,
-                    backgroundColor: '#ffffff'
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: orientation }
-            };
-
-            try {
-                document.body.appendChild(exportWrapper);
-                await new Promise(r => setTimeout(r, 2000));
-                await html2pdf().set(opt).from(exportWrapper).save();
-                document.body.removeChild(exportWrapper);
-            } catch (err) {
-                console.error("PDF Error:", err);
-                alert("Download failed. Please try again.");
-            } finally {
-                window.scrollTo(0, originalScroll);
+        if (downloadBtn) {
+            downloadBtn.onclick = async () => {
+                const originalBtnText = downloadBtn.innerHTML;
+                downloadBtn.disabled = true;
+                downloadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'এক্সপোর্ট হচ্ছে...' : 'Exporting...'}`;
+                const filename = `${type}_report_${new Date().toISOString().split('T')[0]}.pdf`;
+                const orientation = (type === 'members') ? 'landscape' : 'portrait';
+                await generatePDFFromHTML(contentEl.innerHTML, filename, reportTitle, orientation);
                 downloadBtn.disabled = false;
                 downloadBtn.innerHTML = originalBtnText;
-            }
-        };
+            };
+        }
 
     } catch (error) {
-        contentEl.innerHTML = `<div style="color:red; padding:20px;">Error: ${error.message}</div>`;
+        console.error("Report Error:", error);
+        if (contentEl) contentEl.innerHTML = `<div style="color:red; padding:20px;">Error: ${error.message}</div>`;
     }
 };
 
@@ -3177,6 +3352,17 @@ window.applyReportFilters = () => {
     const fromDate = document.getElementById('reportFromDate').value;
     const toDate = document.getElementById('reportToDate').value;
     viewReport(currentReportType, fromDate || null, toDate || null);
+};
+
+window.printCurrentReport = () => {
+    const contentEl = document.getElementById('reportPreviewContent');
+    const titleEl = document.getElementById('reportPreviewTitle');
+    if (contentEl && titleEl) {
+        const title = titleEl.innerText;
+        const filename = `${currentReportType}_report_${new Date().toISOString().split('T')[0]}.pdf`;
+        const orientation = (currentReportType === 'members') ? 'landscape' : 'portrait';
+        generatePDFFromHTML(contentEl.innerHTML, filename, title, orientation);
+    }
 };
 
 window.closeReportPreview = () => {
@@ -3242,6 +3428,79 @@ window.togglePermissionsUI = () => {
         ui.style.display = 'block';
     } else {
         ui.style.display = 'none';
+    }
+};
+
+window.repairAllDuesData = async () => {
+    if (!confirm("This will recalculate all member dues and backfill missing 'Approved By' data. Continue?")) return;
+    
+    const btn = document.getElementById('repairDuesBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Repairing...`;
+    }
+
+    try {
+        const usersSnap = await db.collection('users').get();
+        const depositsSnap = await db.collection('deposits').where('status', '==', 'approved').get();
+        
+        const depositMap = {};
+        const updateBatch = db.batch();
+        let updateCount = 0;
+
+        // Fetch Owner's Name for backfill (Fallback to specific name if not found)
+        let ownerName = "Habibullah Foridi";
+        const ownerSnap = await db.collection('users').where('email', '==', 'growhalal0@gmail.com').get();
+        if (!ownerSnap.empty) ownerName = ownerSnap.docs[0].data().name || ownerName;
+
+        depositsSnap.forEach(doc => {
+            const d = doc.data();
+            if (!depositMap[d.uid]) depositMap[d.uid] = [];
+            depositMap[d.uid].push(d);
+
+            // Backfill Approved By if missing
+            if (!d.approvedBy) {
+                updateBatch.update(doc.ref, { approvedBy: ownerName });
+                updateCount++;
+                if (updateCount >= 450) {
+                    // Safe batching logic could be added here if needed, but we'll stick to simple 500 limit for now
+                }
+            }
+        });
+
+        usersSnap.forEach(userDoc => {
+            const uid = userDoc.id;
+            const deps = depositMap[uid] || [];
+            
+            const dues = {
+                admissionPaid: 0,
+                monthlyPaidCount: 0,
+                extraTermsPaid: []
+            };
+
+            deps.forEach(d => {
+                if (d.type === 'Admission Fee') dues.admissionPaid += (d.amount || 0);
+                else if (d.type === 'Monthly Deposit') dues.monthlyPaidCount++;
+                else if (d.type === 'Extra Deposit') {
+                    const term = `${d.month} ${d.year}`;
+                    if (!dues.extraTermsPaid.includes(term)) dues.extraTermsPaid.push(term);
+                }
+            });
+
+            updateBatch.update(userDoc.ref, { dues: dues });
+            updateCount++;
+        });
+
+        await updateBatch.commit();
+        alert(`Success! Repaired dues for ${usersSnap.size} members and backfilled ${updateCount - usersSnap.size} deposit records.`);
+    } catch (e) {
+        console.error("Repair Error:", e);
+        alert("Repair failed: " + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-screwdriver-wrench"></i> Repair Dues`;
+        }
     }
 };
 

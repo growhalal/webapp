@@ -12,7 +12,9 @@
 <body class="animate-fade">
     <header class="container">
         <nav>
-            <div class="logo">Grow<span>Halal</span> <small
+            <div class="logo">
+                <img src="logo.png" alt="Grow Halal">
+                Grow<span>Halal</span> <small
                     style="font-size: 0.7rem; color: var(--text-muted);">(Owner)</small></div>
             <button onclick="logout()" class="btn btn-link">Sign Out</button>
         </nav>
@@ -49,7 +51,7 @@
                         <option value="admin">Admin</option>
                         <option value="owner">Owner</option>
                     </select>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="updateRole()">Update Role</button>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="updateUserRole()">Update Role</button>
                 </div>
             </section>
 
@@ -72,7 +74,7 @@
 
     <!-- PDF Generation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="app.js?v=3" defer></script>
+    <script src="app.js?v=6" defer></script>
 </body>
 
 </html>

@@ -17,10 +17,13 @@
     <div class="animate-fade">
         <header class="container">
             <nav>
-                <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
                     <i class="fa-solid fa-bars-staggered" id="menuBtn"
                         style="font-size: 1.6rem; cursor: pointer; color: var(--primary-color);"></i>
-                    <div class="logo">Grow<span>Halal</span></div>
+                    <div class="logo">
+                        <img src="logo.png" alt="Grow Halal">
+                        Grow<span>Halal</span>
+                    </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <button id="langToggleBtn" class="lang-toggle" onclick="toggleLanguage()"><i
@@ -108,7 +111,15 @@
             <section id="ownerSection" class="glass-card mb-4" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="font-size: 1.1rem; color: #8b5cf6;" data-i18n="section-directory">Member Directory</h3>
-                    <i class="fa-solid fa-xmark" onclick="hideSection('ownerSection')" style="cursor: pointer;"></i>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button id="repairDuesBtn" onclick="repairAllDuesData()" class="btn btn-sm" style="background: #8b5cf6; color: white; border: none; border-radius: 8px; font-size: 0.75rem; padding: 6px 15px; display: none; font-weight: 700; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);">
+                            <i class="fa-solid fa-screwdriver-wrench"></i> Repair Dues Data
+                        </button>
+                        <button id="dueReportBtn" onclick="openDueReport()" class="btn btn-sm" style="background: #fbbf24; color: white; border: none; border-radius: 8px; font-size: 0.75rem; padding: 6px 15px; display: none; font-weight: 700; box-shadow: 0 4px 10px rgba(251, 191, 36, 0.3);">
+                            <i class="fa-solid fa-clipboard-list"></i> Due List
+                        </button>
+                        <i class="fa-solid fa-xmark" onclick="hideSection('ownerSection')" style="cursor: pointer; font-size: 1.2rem; color: var(--text-muted);"></i>
+                    </div>
                 </div>
 
 
@@ -280,7 +291,8 @@
                 <div class="grid-2">
                     <!-- Report Card 1: Expenses -->
                     <div class="glass-card"
-                        style="padding: 20px; text-align: center; background: rgba(229, 62, 62, 0.02); border: 1px solid rgba(229, 62, 62, 0.1);">
+                        style="padding: 20px; text-align: center; background: rgba(229, 62, 62, 0.02); border: 1px solid rgba(229, 62, 62, 0.1); position: relative;">
+
                         <i class="fa-solid fa-file-invoice-dollar"
                             style="font-size: 2rem; color: var(--error); margin-bottom: 15px;"></i>
                         <h4 style="margin-bottom: 10px;" data-i18n="report-expense-ledger">Expense Ledger</h4>
@@ -295,7 +307,8 @@
 
                     <!-- Report Card 2: Financial Audit -->
                     <div class="glass-card"
-                        style="padding: 20px; text-align: center; background: rgba(45, 90, 71, 0.02); border: 1px solid rgba(45, 90, 71, 0.1);">
+                        style="padding: 20px; text-align: center; background: rgba(45, 90, 71, 0.02); border: 1px solid rgba(45, 90, 71, 0.1); position: relative;">
+
                         <i class="fa-solid fa-vault"
                             style="font-size: 2rem; color: var(--primary-color); margin-bottom: 15px;"></i>
                         <h4 style="margin-bottom: 10px;" data-i18n="report-financial-audit">Master Financials</h4>
@@ -310,7 +323,8 @@
 
                     <!-- Report Card 3: Investments -->
                     <div class="glass-card"
-                        style="padding: 20px; text-align: center; background: rgba(249, 115, 22, 0.02); border: 1px solid rgba(249, 115, 22, 0.1);">
+                        style="padding: 20px; text-align: center; background: rgba(249, 115, 22, 0.02); border: 1px solid rgba(249, 115, 22, 0.1); position: relative;">
+
                         <i class="fa-solid fa-chart-line"
                             style="font-size: 2rem; color: #f97316; margin-bottom: 15px;"></i>
                         <h4 style="margin-bottom: 10px;" data-i18n="report-investments">Investment Portfolio</h4>
@@ -325,7 +339,8 @@
 
                     <!-- Report Card 4: Detailed Member Audit -->
                     <div class="glass-card"
-                        style="padding: 20px; text-align: center; background: rgba(139, 92, 246, 0.02); border: 1px solid rgba(139, 92, 246, 0.1);">
+                        style="padding: 20px; text-align: center; background: rgba(139, 92, 246, 0.02); border: 1px solid rgba(139, 92, 246, 0.1); position: relative;">
+
                         <i class="fa-solid fa-id-card-clip"
                             style="font-size: 2rem; color: #8b5cf6; margin-bottom: 15px;"></i>
                         <h4 style="margin-bottom: 10px;" data-i18n="report-member-audit">Deep Member Audit</h4>
@@ -340,7 +355,8 @@
 
                     <!-- Report Card 5: Deposit Ledger (Receipts) -->
                     <div class="glass-card"
-                        style="padding: 20px; text-align: center; background: rgba(16, 185, 129, 0.02); border: 1px solid rgba(16, 185, 129, 0.1);">
+                        style="padding: 20px; text-align: center; background: rgba(16, 185, 129, 0.02); border: 1px solid rgba(16, 185, 129, 0.1); position: relative;">
+
                         <i class="fa-solid fa-file-invoice"
                             style="font-size: 2rem; color: #10b981; margin-bottom: 15px;"></i>
                         <h4 style="margin-bottom: 10px;" data-i18n="report-deposit-ledger">Deposit Ledger</h4>
@@ -354,7 +370,8 @@
 
                     <!-- Report Card 6: Deleted Members Archive -->
                     <div id="reportArchiveCard" class="glass-card"
-                        style="padding: 20px; text-align: center; background: rgba(55, 65, 81, 0.02); border: 1px solid rgba(55, 65, 81, 0.1); display: none;">
+                        style="padding: 20px; text-align: center; background: rgba(55, 65, 81, 0.02); border: 1px solid rgba(55, 65, 81, 0.1); display: none; position: relative;">
+
                         <i class="fa-solid fa-box-archive"
                             style="font-size: 2rem; color: #374151; margin-bottom: 15px;"></i>
                         <h4 style="margin-bottom: 10px;">Deleted Members Archive</h4>
@@ -398,11 +415,9 @@
     <div id="drawerOverlay" class="drawer-overlay" onclick="closeMenu()"></div>
     <div id="drawer" class="drawer">
         <div class="drawer-header" style="position: relative;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <h2 style="border: none; padding-bottom: 0;">Menu</h2>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 30px;">Grow Halal Management
-                    </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <div class="logo">
+                    <img src="logo.png" alt="Grow Halal" style="height: 65px; width: auto;">
                 </div>
                 <!-- Cute Theme Toggle -->
                 <div id="themeToggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch Theme">
@@ -905,14 +920,20 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <!-- PDF Generation Libraries -->
+    <!-- PDF Generation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="app.js?v=5" defer></script>
+    <script src="app.js?v=6" defer></script>
     <!-- Report Preview Modal -->
     <div id="reportPreviewModal" class="modal-overlay">
         <div class="modal-content animate-fade" style="max-width: 900px; width: 95%;">
             <div class="modal-header">
                 <h2 id="reportPreviewTitle">Report Preview</h2>
-                <div class="close-btn" onclick="closeReportPreview()"><i class="fa-solid fa-xmark"></i></div>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <div class="print-btn" onclick="printCurrentReport()" style="cursor: pointer; background: var(--bg-light); border: 1px solid var(--border-color); border-radius: 8px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 1.1rem; transition: all 0.2s;" title="Print or Save as PDF">
+                        <i class="fa-solid fa-print"></i>
+                    </div>
+                    <div class="close-btn" onclick="closeReportPreview()"><i class="fa-solid fa-xmark"></i></div>
+                </div>
             </div>
             <div id="reportFilters"
                 style="margin-bottom: 20px; padding: 15px; background: rgba(45, 90, 71, 0.05); border-radius: 12px; display: none; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
@@ -1072,6 +1093,22 @@
             </button>
         </div>
     </nav>
+
+    <!-- Due Report Modal -->
+    <div id="dueReportModal" class="modal-overlay">
+        <div class="modal-content animate-fade" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 id="dueReportTitle">Unpaid Dues List</h2>
+                <div class="close-btn" onclick="closeDueReport()"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+            <div id="dueReportContent" style="max-height: 500px; overflow-y: auto;">
+                <!-- Content will be injected here -->
+            </div>
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                <button onclick="closeDueReport()" class="btn btn-link">Close</button>
+            </div>
+        </div>
+    </div>
 
 </body>
 
