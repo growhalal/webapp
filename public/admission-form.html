@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admission Form - Grow Halal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #1e4d3a;
+            --primary-light: #2d6a4f;
+            --bg-light: #f8fafc;
+        }
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Inter', 'Hind Siliguri', sans-serif;
+            color: #334155;
+        }
+        .form-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 50px;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .form-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary-dark), var(--primary-light));
+        }
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 3px solid var(--primary-light);
+        }
+        .form-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .form-section {
+            margin-bottom: 15px;
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title i {
+            color: var(--primary-light);
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #475569;
+        }
+        .input-box {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #1e293b;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .input-box:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+        }
+        .address-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .declaration-box {
+            background: #fff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-light);
+            margin-top: 5px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        .signature-section {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-top: 10px;
+        }
+        .signature-line {
+            border-top: 2px solid #334155;
+            width: 200px;
+            text-align: center;
+            padding-top: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .btn-download {
+            background: var(--primary-dark);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        .btn-download:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(30, 77, 58, 0.2);
+        }
+        .btn-back {
+            color: #64748b;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .print-only {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .grid-2, .address-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-container {
+                padding: 25px;
+                margin: 20px;
+            }
+            .signature-section {
+                flex-direction: column;
+                align-items: center;
+                gap: 40px;
+            }
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .photo-preview-box {
+            width: 100%;
+            height: 120px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: #fff;
+            position: relative;
+        }
+        .photo-preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        .photo-preview-box i {
+            font-size: 1.5rem;
+            color: #94a3b8;
+        }
+        .photo-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #475569;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            .no-pdf { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; margin: 0; padding: 0; font-size: 0.85rem; }
+            .form-container { 
+                box-shadow: none; margin: 0; padding: 0; width: 100%; max-width: 100%; border-radius: 0; border: none;
+            }
+            .form-container::before { display: none; }
+            
+            /* Enforce Grid in Print */
+            .grid-2 { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+            .grid-3 { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 8px !important; }
+            .grid-4 { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
+            
+            .form-section { padding: 8px 12px; margin-bottom: 8px; border: 1px solid #e2e8f0 !important; }
+            .section-title { margin-bottom: 6px; font-size: 0.9rem; }
+            .form-group { margin-bottom: 6px; }
+            label { font-size: 0.75rem; margin-bottom: 2px; }
+            .input-box { padding: 4px 8px; font-size: 0.8rem; }
+            
+            .photo-preview-box { height: 90px; }
+            .photo-label { font-size: 0.65rem; }
+            
+            .declaration-box { padding: 8px; font-size: 0.75rem; line-height: 1.3; margin-top: 4px; }
+            .signature-section { margin-top: 15px; padding-top: 10px; }
+            .form-header { margin-bottom: 15px; padding-bottom: 10px; border-width: 2px; }
+        }
+        /* Constitution Styles */
+        .constitution-section {
+            background: #fff;
+            padding: 35px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 40px;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+        .constitution-section h2 {
+            color: var(--primary-dark);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.6rem;
+            font-weight: 800;
+        }
+        .chapter-title {
+            font-weight: 800;
+            color: var(--primary-light);
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+            display: block;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 5px;
+        }
+        .con-content {
+            font-size: 0.95rem;
+            text-align: justify;
+        }
+        .member-list {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        .member-list li {
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container" id="admissionTemplate">
+        <div class="form-header">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <img src="logo.png" alt="Grow Halal" style="height: 80px; width: auto;">
+                <div>
+                    <h1 style="font-size: 2.2rem; color: var(--primary-dark); margin: 0; line-height: 1;">GROW HALAL</h1>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin: 5px 0 0 0; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Investment for a Halal Future</p>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div class="form-title" style="font-size: 1.2rem; background: var(--primary-dark); color: white; padding: 8px 15px; border-radius: 8px; display: inline-block;">Membership Admission Form</div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">Registration Date: <span id="currentDateDisplay"></span></p>
+            </div>
+        </div>
+
+        <!-- Constitution Section (Browser only) -->
+        <div class="constitution-section no-pdf">
+            <h2>নীতিমালা ও পরিচালনা সংবিধান</h2>
+            
+            <div class="con-content">
+                <span class="chapter-title">অধ্যায় ১: প্রতিষ্ঠানের উদ্দেশ্য</span>
+                এই প্রতিষ্ঠানের মূল উদ্দেশ্য হলো একটি ইসলামভিত্তিক আর্থিক ব্যবস্থা গড়ে তোলা, যেখানে সদস্যদের মধ্যে পারস্পরিক বিশ্বাস, সহযোগিতা ও ন্যায়ভিত্তিক সমৃদ্ধি প্রতিষ্ঠিত হবে। সকল কার্যক্রম শরিয়য়াহসম্মত পদ্ধতিতে পরিচালিত হবে।
+
+                <span class="chapter-title">অধ্যায় ২: বিনিয়োগ পদ্ধতি</span>
+                সদস্য হওয়ার জন্য সকলকে প্রতিষ্ঠানের নীতিমালা মেনে চলতে হবে এবং নির্ধারিত অর্থ যথা জমা প্রদান করতে হবে।
+                <ul>
+                    <li>প্রত্যেক সদস্যকে যোগদানের সময় এককালীন ১০,০০০ টাকা এডমিশন ফি এবং প্রতি মাসের ১২ তারিখের মধ্যে ১,০০০ টাকা করে জমা দিতে হবে।</li>
+                    <li>প্রতি ৬ মাসের মধ্যে অতিরিক্ত ১,৫০০ টাকা জমা প্রদান করতে হবে।</li>
+                </ul>
+
+                <span class="chapter-title">অধ্যায় ৩: পরিচালনা পরিষদ</span>
+                প্রতিষ্ঠান পরিচালনার জন্য একটি পরিচালনা পরিষদ থাকবে, যা প্রতিষ্ঠানের সকল কার্যক্রম তদারকি ও পরিচালনা করবে।
+                বর্তমান দায়িত্বশীলদের তালিকা নিম্নরূপঃ
+                <ul class="member-list">
+                    <li><strong>আমির:</strong> যায়েদ হাসান সিফাত</li>
+                    <li><strong>নায়েবে আমির:</strong> শহিদুল ইসলাম সজীব</li>
+                    <li><strong>উপদেষ্টা:</strong> হাবিবুল্লাহ ফরিদী</li>
+                    <li><strong>কোষাধ্যক্ষ:</strong> মেছবাউল ইসলাম রাজু</li>
+                    <li><strong>সহ কোষাধ্যক্ষ:</strong> আশরাফ আলী</li>
+                    <li><strong>সাংগঠনিক সম্পাদক:</strong> রাহিক খান খালিদ</li>
+                </ul>
+                <strong>পরামর্শ সদস্যবৃন্দ:</strong>
+                <ol class="member-list">
+                    <li>আব্দুর রহমান</li>
+                    <li>সাইফুল ইসলাম</li>
+                    <li>মুস্তাফিজুর রহমান</li>
+                </ol>
+                প্রয়োজনে সদস্য সংখ্যা বৃদ্ধি বা পরিবর্তন করা যাবে।
+
+                <span class="chapter-title">অধ্যায় ৪: বিনিয়োগ ও মুনাফা বণ্টন</span>
+                প্রতিষ্ঠানের সকল অর্থ শরিয়াহসম্মত খাতে বিনিয়োগ করা হবে। মুনাফা বণ্টন সদস্যদের বিনিয়োগের পরিমাণ অনুযায়ী নির্ধারিত হবে। প্রতিষ্ঠানের আর্থিক কার্যক্রম সম্পূর্ণ স্বচ্ছতার সাথে পরিচালিত হবে এবং নির্দিষ্ট সময় পর পর সদস্যদের রিপোর্ট প্রদান করা হবে।
+
+                <span class="chapter-title">অধ্যায় ৫: সদস্য প্রত্যাহার ও মূলধন ফেরত</span>
+                <ul>
+                    <li>কোনো সদস্য দুই বছর পূর্ণ হওয়ার আগে প্রতিষ্ঠানের পূর্ণ সুবিধা গ্রহণ করতে পারবে না।</li>
+                    <li>বিশেষ প্রয়োজনে আংশিক অর্থ উত্তোলন পরিচালনা কমিটির অনুমোদনের ভিত্তিতে করা যাবে।</li>
+                    <li>মূলধন ফেরতের সময় ও পদ্ধতি প্রতিষ্ঠানের আর্থিক অবস্থার উপর ভিত্তি করে নির্ধারণ করা হবে।</li>
+                    <li>সদস্য মৃত্যুবরণ করলে তার মনোনীত নমিনির নিকট অর্থ প্রদান করা হবে।</li>
+                </ul>
+
+                <span class="chapter-title">অধ্যায় ৬: শৃঙ্খলা ও নিয়ন্ত্রণ</span>
+                সকল সদস্যকে প্রতিষ্ঠানের নিয়ম-কানুন মেনে চলতে হবে। কেউ প্রতিষ্ঠানের ক্ষতি করলে বা অনিয়মে জড়িত হলে তার বিরুদ্ধে প্রয়োজনীয় ব্যবস্থা গ্রহণ করা হবে। সকল কার্যক্রম ইসলামী শরিয়াহ অনুযায়ী পরিচালিত হবে। কোনো বিষয়ে মতবিরোধ হলে অধিকাংশ সদস্যের মতামতের ভিত্তিতে সিদ্ধান্ত গৃহীত হবে। প্রতিষ্ঠানের সকল কার্যক্রম দেশের প্রচলিত আইন অনুযায়ী পরিচালিত হবে।
+
+                <span class="chapter-title">অধ্যায় ৭: অতিরিক্ত নীতিমালা (নতুন সংযোজন)</span>
+                <ul>
+                    <li>প্রতি ৬ মাস অন্তর প্রতিষ্ঠানের হিসাব নিরীক্ষা (Audit) করা হবে।</li>
+                    <li>সকল লেনদেনের লিখিত বা ডিজিটাল প্রমাণ সংরক্ষণ করতে হবে।</li>
+                    <li>সদস্যদের নিয়মিত আর্থিক রিপোর্ট প্রদান করা হবে।</li>
+                    <li>জমা প্রদানে বিলম্ব হলে যুক্তিসঙ্গত সময় (Grace Period) বিবেচনা করা যেতে পারে।</li>
+                    <li>সকল সদস্যের তথ্য গোপনীয়তা রক্ষা করা হবে।</li>
+                </ul>
+            </div>
+        </div>
+
+        <form id="admissionForm">
+            <div class="form-body" style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                <!-- Left Side: Main Form Content -->
+                <div class="main-form" style="flex: 1; min-width: 300px;">
+                    <!-- Member Details -->
+                    <div class="form-section">
+                        <div class="section-title"><i class="fa-solid fa-user"></i> Member Information</div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Full Name (স্মরণীয় নাম)</label>
+                                <input type="text" name="fullName" class="input-box" placeholder="আপনার পূর্ণ নাম লিখুন" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Father’s Name (পিতার নাম)</label>
+                                <input type="text" name="fatherName" class="input-box" placeholder="পিতার নাম লিখুন" required>
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Mobile Number</label>
+                                <input type="tel" name="mobile" class="input-box" placeholder="০১৭XXXXXXXX" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" name="email" class="input-box" placeholder="example@mail.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Present Address -->
+                    <div class="form-section">
+                        <div class="section-title"><i class="fa-solid fa-location-dot"></i> Present Address (বর্তমান ঠিকানা)</div>
+                        <div class="form-group">
+                            <label>Full Address (গ্রাম/মহল্লা, ডাকঘর, উপজেলা, জেলা)</label>
+                            <input type="text" name="presentFullAddress" class="input-box" placeholder="পূর্ণ ঠিকানা লিখুন">
+                        </div>
+                    </div>
+
+                    <!-- Permanent Address -->
+                    <div class="form-section">
+                        <div class="section-title"><i class="fa-solid fa-house"></i> Permanent Address (স্থায়ী ঠিকানা)</div>
+                        <div class="form-group">
+                            <label>Full Address (গ্রাম/মহল্লা, ডাকঘর, উপজেলা, জেলা)</label>
+                            <input type="text" name="permanentFullAddress" class="input-box" placeholder="পূর্ণ ঠিকানা লিখুন">
+                        </div>
+                    </div>
+
+                    <!-- Nominee -->
+                    <div class="form-section">
+                        <div class="section-title"><i class="fa-solid fa-user-group"></i> Nominee Information</div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Nominee Name</label>
+                                <input type="text" name="nomineeName" class="input-box">
+                            </div>
+                            <div class="form-group">
+                                <label>Relation</label>
+                                <input type="text" name="nomineeRelation" class="input-box">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Nominee Address Detail</label>
+                            <input type="text" name="nomineeFullAddress" class="input-box" placeholder="পূর্ণ ঠিকানা লিখুন">
+                        </div>
+                    </div>
+
+                    <!-- Emergency & Declaration (Combined to save space) -->
+                    <div class="form-section">
+                        <div class="section-title"><i class="fa-solid fa-phone-flip"></i> Emergency Contact</div>
+                        <div class="grid-3">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" name="emergencyName" class="input-box">
+                            </div>
+                            <div class="form-group">
+                                <label>Relation</label>
+                                <input type="text" name="emergencyRelation" class="input-box">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" name="emergencyPhone" class="input-box">
+                            </div>
+                        </div>
+
+                        <!-- Compact Declaration inside same section block -->
+                        <div class="section-title" style="margin-top: 15px;"><i class="fa-solid fa-hand-holding-heart"></i> Declaration (অঙ্গীকারনামা)</div>
+                        <div class="declaration-box">
+                            আমি <strong id="displayDeclarant">__________</strong> অঙ্গীকার করছি যে, উপরোক্ত সকল তথ্য সঠিক এবং আমি Grow Halal প্রতিষ্ঠানের একজন সদস্য হিসেবে সকল নীতিমালা মেনে চলব, সততা ও দায়িত্বশীলতার সাথে আমার দায়িত্ব পালন করব এবং প্রতিষ্ঠানের উন্নতি ও কল্যাণে সর্বদা সচেষ্ট থাকব।
+                        </div>
+                        
+                        <div class="signature-section">
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" name="declDate" class="input-box" style="width: auto; padding: 4px 8px;">
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="height: 35px;"></div> <!-- Reduced Space for manual signature -->
+                                <div style="border-top: 2px solid #334155; width: 220px; font-weight: 700; padding-top: 5px;">Applicant Signature</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Sidebar -->
+                <div class="sidebar" style="width: 180px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px;">
+                    <!-- Profit Share Box -->
+                    <div class="form-section" style="padding: 15px; margin-bottom: 0;">
+                        <label style="font-weight: 700; color: var(--primary-dark); display: block; margin-bottom: 20px; text-align: left;">Profit Share:</label>
+                        <div style="border-bottom: 1px dashed #334155; margin-bottom: 5px;"></div>
+                        <div style="text-align: right; font-weight: bold; font-size: 0.9rem;">%</div>
+                    </div>
+
+                    <!-- Photos Box -->
+                    <div class="form-section" style="padding: 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 0;">
+                        <!-- Member Photo -->
+                        <div class="form-group" style="margin: 0;">
+                            <div class="photo-preview-box" id="memberPhotoPreview" style="height: 140px;">
+                                <i class="fa-solid fa-user-plus"></i>
+                                <img src="" alt="Member Photo">
+                            </div>
+                            <div class="photo-label">MEMBER PHOTO</div>
+                            <input type="file" name="memberPhoto" class="no-print" style="width: 100%; font-size: 0.65rem; margin-top: 5px;" onchange="previewImage(this, 'memberPhotoPreview')">
+                        </div>
+
+                        <!-- Member NID -->
+                        <div class="form-group" style="margin: 0;">
+                            <div class="photo-preview-box" id="memberNidPreview" style="height: 190px;">
+                                <i class="fa-solid fa-address-card"></i>
+                                <img src="" alt="Member NID">
+                            </div>
+                            <div class="photo-label">MEMBER NID</div>
+                            <input type="file" name="nidCopy" class="no-print" style="width: 100%; font-size: 0.65rem; margin-top: 5px;" onchange="previewImage(this, 'memberNidPreview')">
+                        </div>
+
+                        <!-- Nominee Photo -->
+                        <div class="form-group" style="margin: 0;">
+                            <div class="photo-preview-box" id="nomineePhotoPreview" style="height: 140px;">
+                                <i class="fa-solid fa-user-tag"></i>
+                                <img src="" alt="Nominee Photo">
+                            </div>
+                            <div class="photo-label">NOMINEE PHOTO</div>
+                            <input type="file" name="nomineePhoto" class="no-print" style="width: 100%; font-size: 0.65rem; margin-top: 5px;" onchange="previewImage(this, 'nomineePhotoPreview')">
+                        </div>
+
+                        <!-- Nominee NID -->
+                        <div class="form-group" style="margin: 0;">
+                            <div class="photo-preview-box" id="nomineeNidPreview" style="height: 190px;">
+                                <i class="fa-solid fa-id-card-clip"></i>
+                                <img src="" alt="Nominee NID">
+                            </div>
+                            <div class="photo-label">NOMINEE NID</div>
+                            <input type="file" name="nomineeNidCopy" class="no-print" style="width: 100%; font-size: 0.65rem; margin-top: 5px;" onchange="previewImage(this, 'nomineeNidPreview')">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="no-print" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <a href="login.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> ফিরে যান</a>
+                <button type="button" id="downloadBtn" class="btn-download">
+                    <i class="fa-solid fa-file-pdf"></i> Download PDF Form
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Preview Image Function
+        function previewImage(input, previewId) {
+            const previewBox = document.getElementById(previewId);
+            const img = previewBox.querySelector('img');
+            const icon = previewBox.querySelector('i');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    icon.style.display = 'none';
+                }
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                img.src = '';
+                img.style.display = 'none';
+                icon.style.display = 'block';
+            }
+        }
+
+        // Sync declarant name
+        document.querySelector('input[name="fullName"]').addEventListener('input', function(e) {
+            const val = e.target.value.trim();
+            document.getElementById('displayDeclarant').innerText = val || '__________';
+        });
+
+        document.getElementById('downloadBtn').onclick = function() {
+            const btn = this;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generating...';
+            btn.disabled = true;
+
+            const element = document.getElementById('admissionTemplate');
+            
+            // Create a hidden iframe for printing
+            const pf = document.createElement('iframe');
+            pf.style.position = 'fixed';
+            pf.style.right = '0';
+            pf.style.bottom = '0';
+            pf.style.width = '0';
+            pf.style.height = '0';
+            pf.style.border = '0';
+            document.body.appendChild(pf);
+
+            const doc = pf.contentWindow.document;
+            
+            // Get all styles from current document
+            let styles = '';
+            document.querySelectorAll('style, link[rel="stylesheet"]').forEach(el => {
+                styles += el.outerHTML;
+            });
+
+            doc.open();
+            doc.write(`
+                <html>
+                <head>
+                    <title>Grow Halal Admission Form</title>
+                    ${styles}
+                    <style>
+                        @page { size: A4 portrait; margin: 10mm; }
+                        body { background: white !important; padding: 0 !important; margin: 0 !important; }
+                        .form-container { 
+                            box-shadow: none !important; 
+                            border: none !important; 
+                            margin: 0 !important; 
+                            padding: 0 !important; 
+                            width: 100% !important; 
+                            max-width: 100% !important;
+                        }
+                        .no-pdf { display: none !important; }
+                        .print-only { display: block !important; }
+                        .form-body {
+                            display: grid !important;
+                            grid-template-columns: 1fr 180px !important;
+                            gap: 20px !important;
+                        }
+                        /* Ensure fonts load */
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+                    </style>
+                </head>
+                <body>
+                    <div class="form-container">
+                        ${element.innerHTML}
+                    </div>
+                </body>
+                </html>
+            `);
+            doc.close();
+
+            // Wait for styles/images and trigger print
+            pf.contentWindow.onload = function() {
+                setTimeout(() => {
+                    pf.contentWindow.focus();
+                    pf.contentWindow.print();
+                    setTimeout(() => {
+                        document.body.removeChild(pf);
+                        btn.innerHTML = originalContent;
+                        btn.disabled = false;
+                    }, 1000);
+                }, 500);
+            };
+        };
+
+        window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            const displayDate = new Date().toLocaleDateString('en-GB');
+            
+            document.querySelectorAll('input[type="date"]').forEach(input => {
+                input.value = today;
+            });
+
+            const dateDisplay = document.getElementById('currentDateDisplay');
+            if (dateDisplay) {
+                dateDisplay.innerText = displayDate;
+            }
+        };
+    </script>
+</body>
+</html>

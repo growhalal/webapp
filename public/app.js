@@ -99,6 +99,7 @@ const translations = {
         'login-btn': 'Login',
         'login-forgot': 'Forgot Password?',
         'login-back': '← Back to Home',
+        'login-admission': 'Admission Form',
         // Common
         'admission-fee': 'Admission Fee',
         'monthly-deposit': 'Monthly Deposit',
@@ -224,6 +225,7 @@ const translations = {
         'login-btn': 'লগইন',
         'login-forgot': 'পাসওয়ার্ড ভুলে গেছেন?',
         'login-back': '← হোমে ফিরে যান',
+        'login-admission': 'এডমিশন ফরম',
         // Common
         'admission-fee': 'ভর্তি ফি',
         'monthly-deposit': 'মাসিক জমা',
@@ -2758,7 +2760,7 @@ const waitForAssets = async (container) => {
     ]);
 };
 
-window.viewMemberStatement = async (uid, data, monthsDue, joinDate) => {
+window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly = false) => {
     const titleEl = document.getElementById('reportPreviewTitle');
     const contentEl = document.getElementById('reportPreviewContent');
     const downloadBtn = document.getElementById('downloadBtn');
