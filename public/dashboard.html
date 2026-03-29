@@ -4,26 +4,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Grow Halal</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Grow Halal</title>
+    <link rel="stylesheet" href="style.css?v=13">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- INLINE FONT OVERRIDE TO BYPASS LOCAL BROWSER CACHE -->
+    <style>
+        @font-face {
+            font-family: 'GrowWestInline';
+            src: url('GrowWestRegular-vm1qA.ttf');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        .logo,
+        .logo *,
+        .logo span,
+        .branding-text {
+            font-family: var(--font-branding) !important;
+            text-transform: lowercase !important;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body class="theme-transition">
     <!-- Entry animation wrapper to prevent breaking fixed elements -->
     <div class="animate-fade">
         <header class="container">
-            <nav>
-                <div style="display: flex; align-items: center; gap: 5px;">
+            <nav style="display: flex; justify-content: space-between; align-items: center; padding: 24px 0;">
+                <div style="display: flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-bars-staggered" id="menuBtn"
                         style="font-size: 1.6rem; cursor: pointer; color: var(--primary-color);"></i>
                     <div class="logo">
                         <img src="logo.png" alt="Grow Halal">
-                        Grow<span>Halal</span>
+                        <span>Grow Halal</span>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 15px;">
@@ -38,10 +61,7 @@
             </nav>
         </header>
 
-
         <main class="container" style="padding-top: 20px; padding-bottom: 110px;">
-
-
             <div id="mainDashboard">
                 <!-- Welcome Header -->
                 <div class="mb-4 animate-fade" style="padding: 10px 0;">
@@ -421,7 +441,7 @@
                     <p
                         style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; opacity: 0.8;">
                         Total Company Fund</p>
-                    <h2 style="font-size: 2.2rem; margin: 0; font-weight: 700;">Tk <span
+                    <h2 style="font-size: 2.2rem; margin: 0; font-weight: 700;"><span
                             id="companyTotalBalance">0.00</span></h2>
                 </div>
 
@@ -447,6 +467,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <div class="logo">
                     <img src="logo.png" alt="Grow Halal" style="height: 65px; width: auto;">
+                    <span>Grow Halal</span>
                 </div>
                 <!-- Cute Theme Toggle -->
                 <div id="themeToggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch Theme">
@@ -692,6 +713,10 @@
                             <input type="text" id="memAddress" class="input-box" placeholder="Full Address">
                         </div>
                         <div class="form-group">
+                            <label class="form-label" for="memJoinDate" data-i18n="label-join-date">Join Date</label>
+                            <input type="date" id="memJoinDate" class="input-box">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label" data-i18n="label-photo">Member Photo</label>
                             <input type="file" id="memPhoto" class="input-box" accept="image/*"
                                 style="padding: 10px 20px;">
@@ -917,7 +942,8 @@
                 <p style="color: var(--error); font-size: 0.9rem; margin-bottom: 5px;"><strong>Warning:</strong> This
                     action is permanent and cannot be undone.</p>
                 <p style="color: var(--text-main); font-size: 0.85rem;">The member's data will be transferred to the
-                    <strong>Report Cabinet Archive</strong>.</p>
+                    <strong>Report Cabinet Archive</strong>.
+                </p>
             </div>
 
             <form id="deleteMemberForm">
@@ -929,18 +955,18 @@
 
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
                     <span style="color: var(--text-muted);">Total Savings (Principal):</span>
-                    <strong style="color: var(--primary-color);">Tk <span id="delSavingsDisplay">0</span></strong>
+                    <strong style="color: var(--primary-color);"><span id="delSavingsDisplay">0</span></strong>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.9rem;">
                     <span style="color: var(--text-muted);">Current Profit Share:</span>
-                    <strong style="color: var(--success);">Tk <span id="delProfitDisplay">0</span></strong>
+                    <strong style="color: var(--success);"><span id="delProfitDisplay">0</span></strong>
                 </div>
 
                 <div class="form-group"
                     style="background: var(--bg-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <label class="form-label" style="display: flex; justify-content: space-between;">
                         <span>Company Deduction (%)</span>
-                        <span style="color: var(--error); font-weight: bold;">- Tk <span
+                        <span style="color: var(--error); font-weight: bold;">- <span
                                 id="delDeductionAmount">0</span></span>
                     </label>
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -953,7 +979,7 @@
                 <div
                     style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 2px dashed var(--border-color); font-size: 1.1rem;">
                     <strong>Final Payout:</strong>
-                    <strong style="color: var(--primary-dark);">Tk <span id="delFinalPayout">0</span></strong>
+                    <strong style="color: var(--primary-dark);"><span id="delFinalPayout">0</span></strong>
                 </div>
 
                 <div style="display: flex; gap: 15px; margin-top: 25px;">
@@ -966,14 +992,7 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <!-- PDF Generation Libraries -->
-    <!-- PDF Generation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="app.js?v=6" defer></script>
     <!-- Report Preview Modal -->
     <div id="reportPreviewModal" class="modal-overlay">
         <div class="modal-content animate-fade" style="max-width: 900px; width: 95%;">
@@ -1135,11 +1154,13 @@
             <!-- Profile -->
             <button class="bottom-nav-item" onclick="openSelfProfile()" id="bnav-profile">
                 <i class="fa-solid fa-user"></i>
-                <span>Profile</span>
+                <span data-i18n="menu-profile">Profile</span>
             </button>
-        </div>
-    </nav>
-
+            <!-- Firebase SDKs -->
+            <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+            <script src="app.js?v=11" defer></script>
 </body>
 
 </html>

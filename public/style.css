@@ -14,6 +14,7 @@
     --shadow-sm: 0 4px 6px -1px rgba(45, 90, 71, 0.1);
     --shadow-md: 0 10px 15px -3px rgba(45, 90, 71, 0.08);
     --font-main: 'Outfit', 'Inter', 'SolaimanLipi', system-ui, -apple-system, sans-serif;
+    --font-branding: 'GrowWestInline', sans-serif;
     --input-bg: #F9FAFB;
 }
 
@@ -315,22 +316,28 @@ nav {
     padding: 24px 0;
 }
 
-.logo {
+.logo, .logo *, .logo span {
+    font-family: 'GrowWestInline', sans-serif !important;
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 1.5rem;
-    font-weight: 800;
-    letter-spacing: -0.5px;
+    gap: 6px;
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+    font-weight: normal;
+    text-transform: lowercase !important;
+    position: relative;
+    color: var(--primary-color);
+    white-space: nowrap;
 }
 
 .logo img {
-    height: 48px;
+    height: 45px;
     width: auto;
+    object-fit: contain;
 }
 
 .logo span {
     color: var(--primary-color);
+    white-space: nowrap;
 }
 
 /* Footer */

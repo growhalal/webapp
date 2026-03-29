@@ -3,12 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <title>Database Migration - Grow Halal</title>
+    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .migrate-container { max-width: 600px; margin: 50px auto; }
+        .success { color: green; margin-top: 10px; font-weight: bold; }
+        .error { color: red; margin-top: 10px; }
+        /* Added styles for the new header/logo */
+        .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .logo img { height: 40px; } /* Adjust size as needed */
+        .logo span { font-size: 1.8em; font-weight: bold; color: #2D5A47; }
+        .text-center { text-align: center; }
+        .mb-4 { margin-bottom: 1.5rem; }
+        .p-5 { padding: 3rem; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body style="font-family: sans-serif; padding: 50px; background: #f0f7f4;">
-    <h1>Database Migration: Update Join Dates</h1>
     <p>This script will update all members' <code>createdAt</code> to <strong>December 1, 2025</strong>.</p>
     <button id="migrateBtn" style="padding: 15px 30px; background: #2D5A47; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Run Migration</button>
     <div id="status" style="margin-top: 20px; white-space: pre-wrap; font-family: monospace;"></div>

@@ -4,25 +4,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Grow Halal</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Grow Halal</title>
+    <link rel="stylesheet" href="style.css?v=13">
     <!-- Font Awesome for eye icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- INLINE FONT OVERRIDE TO BYPASS LOCAL BROWSER CACHE -->
+    <style>
+        @font-face {
+            font-family: 'GrowWestInline';
+            src: url('GrowWestRegular-vm1qA.ttf');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        .logo,
+        .logo *,
+        .logo span,
+        .branding-text {
+            font-family: var(--font-branding) !important;
+            text-transform: lowercase !important;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
 </head>
 
 <body>
     <div class="flex-center">
-        <div class="glass-card animate-fade" style="width: 100%; max-width: 400px; padding: 50px 40px; margin: 20px; position: relative;">
+        <div class="glass-card animate-fade"
+            style="width: 100%; max-width: 400px; padding: 50px 40px; margin: 20px; position: relative;">
             <div style="position: absolute; top: 20px; left: 20px;">
                 <div id="themeToggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch Theme">
                     <i class="fa-solid fa-moon"></i>
                 </div>
             </div>
             <div style="position: absolute; top: 20px; right: 20px;">
-                <button id="langToggleBtn" class="lang-toggle" onclick="toggleLanguage()"><i class="fa-solid fa-globe"></i> BN</button>
+                <button id="langToggleBtn" class="lang-toggle" onclick="toggleLanguage()"><i
+                        class="fa-solid fa-globe"></i> BN</button>
             </div>
             <div class="text-center mb-4">
-                <h1 data-i18n="login-welcome" style="font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Welcome</h1>
+                <div class="logo" style="justify-content: center; margin-bottom: 25px;">
+                    <img src="logo.png" alt="Grow Halal logo" style="height: 100px; width: auto;">
+                    <span style="font-size: 2.2rem;">Grow Halal</span>
+                </div>
+                <h1 data-i18n="login-welcome"
+                    style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Welcome
+                </h1>
                 <p data-i18n="login-sub" style="color: var(--text-muted); font-size: 0.95rem; font-weight: 500;">
                     Secure and Shariah-compliant financial management.
                 </p>
@@ -39,7 +69,8 @@
                     <i class="fa-regular fa-eye password-toggle" id="togglePassword"></i>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;" data-i18n="login-btn">Login</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;"
+                    data-i18n="login-btn">Login</button>
 
                 <div id="loginError"
                     style="background: var(--card-bg); color: var(--error); padding: 12px; border-radius: 12px; font-size: 0.85rem; text-align: center; margin-top: 20px; display: none; border: 1px solid #FED7D7;">
@@ -48,11 +79,13 @@
             </form>
 
             <div class="text-center mt-4">
-                <button onclick="forgotPassword()" class="btn btn-link" style="margin: 0 auto;" data-i18n="login-forgot">Forgot Password?</button>
+                <button onclick="forgotPassword()" class="btn btn-link" style="margin: 0 auto;"
+                    data-i18n="login-forgot">Forgot Password?</button>
             </div>
 
             <div class="text-center mt-4">
-                <a href="admission-form.html" class="btn btn-link" style="font-size: 0.85rem;" data-i18n="login-admission">এডমিশন ফরম</a>
+                <a href="admission-form.html" class="btn btn-link" style="font-size: 0.85rem;"
+                    data-i18n="login-admission">এডমিশন ফরম</a>
             </div>
         </div>
     </div>
@@ -61,7 +94,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="app.js?v=6" defer></script>
+    <script src="app.js?v=11" defer></script>
 </body>
 
 </html>

@@ -1,4 +1,5 @@
 // Firebase Configuration
+console.log("Grow Halal App v7 Loaded");
 const firebaseConfig = {
     apiKey: "AIzaSyDRzQD7ZBeiBuW0mHRtUeczt47kF0qSQCM",
     authDomain: "growhalall.firebaseapp.com",
@@ -28,9 +29,17 @@ let _globalSavingsSum = 0;
 let _globalProfitSum = 0;
 let _approvedDepositsCache = {};
 
-// Utility for number formatting
+// Utility for date formatting
+const formatDate = (date) => {
+    if (!date) return 'N/A';
+    const d = (date instanceof Date) ? date : (date.seconds ? new Date(date.seconds * 1000) : new Date(date));
+    if (isNaN(d.getTime())) return 'N/A';
+    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+};
+
 const formatNumber = (num) => {
-    return 'Tk ' + Number(num).toLocaleString('en-IN');
+    const val = parseFloat(num) || 0;
+    return 'Tk ' + val.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 };
 
 // Fee Constants
@@ -98,7 +107,7 @@ const translations = {
         'login-sub': 'Secure and Shariah-compliant financial management.',
         'login-btn': 'Login',
         'login-forgot': 'Forgot Password?',
-        'login-back': '← Back to Home',
+        'login-back': 'Ã¢â€ Â Back to Home',
         'login-admission': 'Admission Form',
         // Common
         'admission-fee': 'Admission Fee',
@@ -197,18 +206,18 @@ const translations = {
     'bn': {
         // Sidebar
         'menu-dashboard': 'ড্যাশবোর্ড',
-        'menu-add-member': 'সদস্যযোগ',
+        'menu-add-member': 'সদস্য যোগ',
         'menu-approvals': 'অনুমোদন',
         'menu-investments': 'বিনিয়োগ',
         'menu-announcements': 'ঘোষণা',
         'menu-expenses': 'খরচ',
         'menu-directory': 'সদস্য তালিকা',
         'menu-permissions': 'পারমিশন',
-        'menu-reports': 'রিপোর্ট কেবিনেট',
+        'menu-reports': 'রিপোর্ট ক্যাবিনেট',
         'menu-support': 'সাপোর্ট',
         'menu-whatsapp': 'হোয়াটসঅ্যাপ গ্রুপ',
         'menu-signout': 'লগ আউট',
-        'menu-add-fund': 'এড ফান্ড',
+        'menu-add-fund': 'এ্যাড ফান্ড',
         // Stats
         'welcome-sub': 'আপনার আর্থিক হাবে স্বাগতম।',
         'stat-system-savings': 'সিস্টেম সঞ্চয়',
@@ -225,7 +234,7 @@ const translations = {
         'login-btn': 'লগইন',
         'login-forgot': 'পাসওয়ার্ড ভুলে গেছেন?',
         'login-back': '← হোমে ফিরে যান',
-        'login-admission': 'এডমিশন ফরম',
+        'login-admission': 'অ্যাডমিশন ফরম',
         // Common
         'admission-fee': 'ভর্তি ফি',
         'monthly-deposit': 'মাসিক জমা',
@@ -239,11 +248,11 @@ const translations = {
         'modal-add-fund': 'তহবিল যোগ করুন',
         'label-date': 'তারিখ',
         'label-month': 'মাস',
-        'label-type': 'জমার ধরণ',
+        'label-type': 'জমার ধরন',
         'label-year': 'বছর',
         'label-amount': 'পরিমাণ',
         'label-ref': 'রেফারেন্স / নোট',
-        'label-receipt': 'রিসিট (ঐচ্ছিক)',
+        'label-receipt': 'রসিদ (ঐচ্ছিক)',
         'btn-submit-deposit': 'ডিপোজিট জমা দিন',
         'placeholder-tk': '৳ ০.০০',
         'placeholder-ref': 'ট্রানজেকশন আইডি বা ট্যাগ',
@@ -264,8 +273,8 @@ const translations = {
         'label-pass': 'লগইন পাসওয়ার্ড',
         'btn-create-account': 'অ্যাকাউন্ট তৈরি করুন',
         // Reports
-        'report-expense-ledger': 'ব্যয় লেজার',
-        'report-financial-audit': 'মাস্টার ফিনান্সিয়াল',
+        'report-expense-ledger': 'ব্যয় লেজার',
+        'report-financial-audit': 'মাস্টার ফিন্যান্সিয়াল',
         'report-investments': 'বিনিয়োগ পোর্টফোলিও',
         'report-member-audit': 'সদস্য অডিট',
         'report-deposit-ledger': 'ডিপোজিট লেজার',
@@ -273,7 +282,7 @@ const translations = {
         'desc-financial': 'মোট সঞ্চয়, ব্যালেন্স এবং লাভের সম্পূর্ণ অডিট।',
         'desc-investments': 'সমস্ত চলমান এবং সম্পন্ন প্রকল্পের বিস্তারিত ইতিহাস।',
         'desc-member': 'নমিনী এবং ডকুমেন্ট লিঙ্ক সহ সম্পূর্ণ সদস্য ডাটাবেস।',
-        'desc-deposit': 'সদস্যদের সমস্ত জমার তথ্য এবং ট্রানজিশন রিসিট ডাউনলোড করুন।',
+        'desc-deposit': 'সদস্যদের সমস্ত জমার তথ্য এবং ট্রানজেকশন রসিদ ডাউনলোড করুন।',
         // Profile & Others
         'modal-profile': 'সদস্য প্রোফাইল',
         'btn-download-pdf': 'পিডিএফ ডাউনলোড',
@@ -282,43 +291,14 @@ const translations = {
         'modal-project-details': 'প্রজেক্ট বিবরণ',
         'label-withdraw-total': 'মোট ফেরত (মূলধন + লাভ)',
         'label-profit': 'হিসাবকৃত লাভ',
-        'label-category': 'ধরণ/বিভাগ',
+        'label-category': 'ধরন/বিভাগ',
         'btn-confirm-withdraw': 'উত্তোলন নিশ্চিত করুন',
         'label-join-date': 'যোগদানের তারিখ',
         'label-total-savings': 'মোট সঞ্চয়',
         'label-profit-share': 'লভ্যাংশ',
         'label-status': 'অবস্থা',
         'status-dues': 'বকেয়া আছে',
-        'status-regular': 'নিয়মিত',
-        'label-outstanding-breakdown': 'বকেয়া ফির বিবরণ',
-        'label-nominee-info': 'নমিনীর তথ্য',
-        'label-nid-doc': 'পরিচয়পত্র (এনআইডি)',
-        'label-authorized-sig': 'কর্তৃপক্ষের স্বাক্ষর',
-        'label-report-date': 'রিপোর্টের তারিখ',
-        'label-operator': 'অপারেটর',
-        'label-member-uid': 'সদস্য আইডি',
-        'label-official-report': 'অফিসিয়াল সদস্য বিস্তারিত রিপোর্ট',
-        'label-system-report': 'অফিসিয়াল সিস্টেম রিপোর্ট',
-        'report-member-statement': 'সদস্য স্টেটমেন্ট',
-        'label-history': 'জমার ইতিহাস',
-        'label-none': 'নেই',
-        'label-paid': 'পরিশোধিত',
-        'label-project-name': 'প্রকল্পের নাম/খাত',
-        'label-medium': 'মাধ্যম',
-        'label-invested-amount': 'বিনিয়োগের পরিমাণ',
-        'label-start-date': 'শুরুর তারিখ',
-        'label-withdraw-date': 'উত্তোলনের তারিখ',
-        'label-completed': 'সম্পন্ন',
-        'label-ongoing': 'চলমান',
-        'label-total-company-share': 'মোট জমা হওয়া কোম্পানি শেয়ার',
-        'label-sl': 'ক্রমিক',
-        'label-payout': 'পরিশোধিত টাকা',
-        'label-description': 'বিবরণ',
-        'label-member-profit': 'সদস্য লাভ',
-        'label-company-share': 'কোম্পানি লাভ',
-        'label-invested': 'বিনিয়োগ',
-        'label-member': 'সদস্য',
-        'label-share-pct': 'শেয়ার (%)'
+        'status-regular': 'নিয়মিত'
     }
 };
 
@@ -352,30 +332,30 @@ function applyTranslations() {
             el.placeholder = sets[key];
         }
     });
-window.waitForAssets = async (container) => {
-    // 1. Wait for Fonts
-    if (document.fonts) {
-        await document.fonts.ready;
-        // Even after ready, give it a moment for layout engine to stabilize
-        await new Promise(r => setTimeout(r, 800));
-    }
+    window.waitForAssets = async (container) => {
+        // 1. Wait for Fonts
+        if (document.fonts) {
+            await document.fonts.ready;
+            // Even after ready, give it a moment for layout engine to stabilize
+            await new Promise(r => setTimeout(r, 800));
+        }
 
-    // 2. Wait for Images
-    const imgs = Array.from(container.querySelectorAll('img'));
-    const imgPromises = imgs.map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise(resolve => {
-            img.onload = resolve;
-            img.onerror = resolve; // Continue even if one fails
+        // 2. Wait for Images
+        const imgs = Array.from(container.querySelectorAll('img'));
+        const imgPromises = imgs.map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(resolve => {
+                img.onload = resolve;
+                img.onerror = resolve; // Continue even if one fails
+            });
         });
-    });
-    
-    await Promise.all(imgPromises);
-    
-    // 3. Final Render Stabilizer
-    // This helps complex Bengali glyphs and absolute layouts settle
-    await new Promise(r => setTimeout(r, 700));
-};
+
+        await Promise.all(imgPromises);
+
+        // 3. Final Render Stabilizer
+        // This helps complex Bengali glyphs and absolute layouts settle
+        await new Promise(r => setTimeout(r, 700));
+    };
     // Specialized translations for dynamic elements if necessary
     const emailInput = document.getElementById('email'); // login.html
     const passInput = document.getElementById('password'); // login.html
@@ -557,7 +537,7 @@ async function checkUserRole(uid, email) {
             if (repairBtn) {
                 repairBtn.style.setProperty('display', 'inline-block', 'important');
             }
-            
+
             await db.collection('users').doc(uid).set({ email, role: 'owner' }, { merge: true });
             return;
         }
@@ -583,7 +563,7 @@ async function checkUserRole(uid, email) {
 const handleRoleUI = (userData) => {
     const role = userData.role || 'member';
     const isOwner = (userData.email && userData.email.toLowerCase() === 'growhalal0@gmail.com') || role === 'owner';
-    
+
     // Always Visible to Everyone
     ['menuInvestments', 'menuExpenses', 'menuUsers'].forEach(id => {
         const el = document.getElementById(id);
@@ -611,10 +591,10 @@ const handleRoleUI = (userData) => {
     // Specialized individual sections
     const adminInv = document.getElementById('adminInvestmentControls');
     if (adminInv) adminInv.style.display = (isOwner || (userData.permissions && userData.permissions.includes('menuInvestments'))) ? 'block' : 'none';
-    
+
     const addExp = document.getElementById('addExpenseBtn');
     if (addExp) addExp.style.display = (isOwner || (userData.permissions && userData.permissions.includes('menuExpenses'))) ? 'block' : 'none';
-    
+
     const archiveCard = document.getElementById('reportArchiveCard');
     if (archiveCard) archiveCard.style.display = isOwner ? 'block' : 'none';
 
@@ -665,7 +645,17 @@ function setupDashboard(user) {
 
         const data = doc.data();
         userRole = data.role || 'member';
-        if (user.email && user.email.toLowerCase() === 'growhalal0@gmail.com') userRole = 'owner';
+        if (user.email && user.email.toLowerCase() === 'growhalal0@gmail.com') {
+            userRole = 'owner';
+            // Set Owner's Join Date to 1/12/2025 if missing or incorrect
+            const expectedDate = new Date('2025-12-01T00:00:00');
+            if (!data.createdAt || !data.createdAt.toDate || data.createdAt.toDate().getTime() !== expectedDate.getTime()) {
+                db.collection('users').doc(user.uid).update({
+                    createdAt: firebase.firestore.Timestamp.fromDate(expectedDate),
+                    excludedProfit: 0
+                });
+            }
+        }
 
         // Update Personal Stats
         const welcomeEl = document.getElementById('welcomeUser');
@@ -673,7 +663,7 @@ function setupDashboard(user) {
             const firstName = (data.name || '').split(' ')[0] || (userRole === 'owner' ? 'Owner' : 'Member');
             welcomeEl.innerText = `Hi, ${firstName}`;
         }
-        
+
         const balEl = document.getElementById('totalBalance');
         if (balEl) balEl.innerText = formatNumber(data.savings || 0);
 
@@ -702,7 +692,7 @@ function setupDashboard(user) {
             const total = doc.exists ? (doc.data().totalProfit || 0) : 0;
             _globalProfitSum = total; // Shared for PDF report calculations
             el.innerText = formatNumber(total);
-            
+
             // Accrued Company Share Indicator (Owner/Admin only)
             if (userRole === 'owner' || userRole === 'admin') {
                 updateCompanyAccruedIndicator(total);
@@ -731,14 +721,33 @@ async function updateCompanyAccruedIndicator(totalSystemProfit) {
         const usersSnap = await db.collection('users').get();
         let totalSavings = 0;
         usersSnap.forEach(u => totalSavings += (u.data().savings || 0));
-        
+
+        // Fetch all finished investments to calculate join-date exclusions
+        const finishedInvs = [];
+        const invSnap = await db.collection('investments').where('status', 'in', ['completed', 'withdrawn']).get();
+        invSnap.forEach(doc => finishedInvs.push(doc.data()));
+
         let totalAccruedCompany = 0;
         usersSnap.forEach(u => {
             const d = u.data();
             const uSavings = d.savings || 0;
             const profitPct = d.profitPercentage || 100;
+            const uJoinDate = d.createdAt ? d.createdAt.toDate() : new Date();
+            uJoinDate.setHours(0, 0, 0, 0);
+
+            // Calculate dynamic excluded profit: profits of investments started before joining
+            let excludedProfit = 0;
+            finishedInvs.forEach(inv => {
+                const sDate = inv.date ? new Date(inv.date) : new Date();
+                sDate.setHours(0, 0, 0, 0);
+                if (sDate < uJoinDate) {
+                    excludedProfit += (inv.profitAmount || 0);
+                }
+            });
+
             if (totalSavings > 0) {
-                const totalSlice = (uSavings / totalSavings) * totalSystemProfit;
+                const effectiveProfit = Math.max(0, totalSystemProfit - excludedProfit);
+                const totalSlice = (uSavings / totalSavings) * effectiveProfit;
                 totalAccruedCompany += totalSlice * (1 - (profitPct / 100));
             }
         });
@@ -758,8 +767,8 @@ async function updateCompanyAccruedIndicator(totalSystemProfit) {
         if (indicator) {
             indicator.innerText = `Accrued Co. Share: ${formatNumber(totalAccruedCompany.toFixed(2))}`;
         }
-    } catch (e) { 
-        console.error("Accrued Stats Error:", e); 
+    } catch (e) {
+        console.error("Accrued Stats Error:", e);
     }
 }
 
@@ -800,14 +809,14 @@ window.loadCompanyAccount = async () => {
             snap.forEach(doc => {
                 const d = doc.data();
                 total += (d.amount || 0);
-                const date = d.date || (d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleDateString() : 'N/A');
-                
+                const date = d.date || (d.timestamp ? formatDate(d.timestamp) : 'N/A');
+
                 html += `
                     <div class="glass-card" style="padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; border: 1px solid var(--border-color);">
                         <div style="flex: 1;">
                             <div style="font-weight: 700; font-size: 0.9rem; color: var(--primary-color);">${d.type || 'Transaction'}</div>
                             <div style="font-size: 0.75rem; color: var(--text-muted);">${d.description || ''}</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${date} • Source: ${d.sourceUser || 'System'}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${date} Ã¢â‚¬Â¢ Source: ${d.sourceUser || 'System'}</div>
                         </div>
                         <div style="font-weight: 800; color: var(--primary-color); font-size: 1rem;">${formatNumber(d.amount || 0)}</div>
                     </div>
@@ -827,20 +836,20 @@ window.openDueReport = async () => {
     const modal = document.getElementById('dueReportModal');
     const content = document.getElementById('dueReportContent');
     if (!modal || !content) return;
-    
+
     modal.style.display = 'flex';
-    content.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'লোড হচ্ছে...' : 'Loading...'}</div>`;
+    content.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'Ã Â¦Â²Ã Â§â€¹Ã Â¦Â¡ Ã Â¦Â¹Ã Â¦Å¡Ã Â§ÂÃ Â¦â€ºÃ Â§â€¡...' : 'Loading...'}</div>`;
 
     try {
         const usersSnap = await db.collection('users').get();
         const docs = usersSnap.docs.map(u => u.data());
-        
+
         let html = `<table class="report-table">
             <thead>
                 <tr>
-                    <th>${currentLang === 'bn' ? 'সদস্যের নাম' : 'Member Name'}</th>
-                    <th>${currentLang === 'bn' ? 'ধরণ' : 'Type'}</th>
-                    <th>${currentLang === 'bn' ? 'বকেয়া বিবরণ' : 'Dues Description'}</th>
+                    <th>${currentLang === 'bn' ? 'Ã Â¦Â¸Ã Â¦Â¦Ã Â¦Â¸Ã Â§ÂÃ Â¦Â¯Ã Â§â€¡Ã Â¦Â° Ã Â¦Â¨Ã Â¦Â¾Ã Â¦Â®' : 'Member Name'}</th>
+                    <th>${currentLang === 'bn' ? 'Ã Â¦Â§Ã Â¦Â°Ã Â¦Â£' : 'Type'}</th>
+                    <th>${currentLang === 'bn' ? 'Ã Â¦Â¬Ã Â¦â€¢Ã Â§â€¡Ã Â§Å¸Ã Â¦Â¾ Ã Â¦Â¬Ã Â¦Â¿Ã Â¦Â¬Ã Â¦Â°Ã Â¦Â£' : 'Dues Description'}</th>
                 </tr>
             </thead>
             <tbody>`;
@@ -848,7 +857,7 @@ window.openDueReport = async () => {
         let hasDues = false;
         const now = new Date();
         const currentYear = now.getFullYear();
-        const currentMonthIdx = now.getMonth(); 
+        const currentMonthIdx = now.getMonth();
 
         // Sort users by name
         docs.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -858,7 +867,7 @@ window.openDueReport = async () => {
 
             const dues = u.dues || { admissionPaid: 0, monthlyPaidCount: 0, extraTermsPaid: [] };
             const joinDate = u.createdAt ? new Date(u.createdAt.seconds * 1000) : null;
-            
+
             // 1. Admission Check
             const adminPaidVal = dues.admissionPaid || 0;
             if (adminPaidVal < REQUIRED_ADMISSION_FEE) {
@@ -876,7 +885,7 @@ window.openDueReport = async () => {
                 const joinYear = joinDate.getFullYear();
                 const totalMonthsSinceJoin = (currentYear - joinYear) * 12 + (currentMonthIdx - joinMonthIdx) + 1;
                 const monthlyPaid = dues.monthlyPaidCount || 0;
-                
+
                 if (monthlyPaid < totalMonthsSinceJoin) {
                     hasDues = true;
                     let missingMonths = [];
@@ -885,7 +894,7 @@ window.openDueReport = async () => {
                         if (mDate > now) break;
                         missingMonths.push(mDate.toLocaleString(currentLang === 'bn' ? 'bn-BD' : 'en-US', { month: 'short', year: 'numeric' }));
                     }
-                    
+
                     if (missingMonths.length > 0) {
                         html += `<tr>
                             <td><strong>${u.name || 'N/A'}</strong></td>
@@ -895,7 +904,7 @@ window.openDueReport = async () => {
                     }
                 }
             }
-            
+
             // 3. Extra Check
             const currentTerm = currentMonthIdx < 6 ? `January-June ${currentYear}` : `July-December ${currentYear}`;
             if (!dues.extraTermsPaid || !dues.extraTermsPaid.includes(currentTerm)) {
@@ -909,12 +918,12 @@ window.openDueReport = async () => {
         });
 
         if (!hasDues) {
-            html += `<tr><td colspan="3" style="text-align:center; padding:20px;">No unpaid dues found! 🎉</td></tr>`;
+            html += `<tr><td colspan="3" style="text-align:center; padding:20px;">No unpaid dues found! Ã°Å¸Å½â€°</td></tr>`;
         }
 
         html += '</tbody></table>';
         content.innerHTML = html;
-        
+
     } catch (e) {
         console.error("Due Report Error:", e);
         content.innerHTML = `<p style="color:var(--error); text-align:center; padding:20px;">Error: ${e.message}</p>`;
@@ -941,11 +950,14 @@ if (addMemberForm) {
         const password = document.getElementById('memPass').value;
 
         try {
-            // 1. Create User in Secondary Auth (so we don't log out)
+            // 1. Create User in Secondary Auth
             const userCredential = await secondaryAuth.createUserWithEmailAndPassword(email, password);
             const newUser = userCredential.user;
 
-            // 2. Save detailed profile to Firestore
+            // 2. Save detailed profile
+            const joinDateStr = document.getElementById('memJoinDate').value;
+            const joinDate = joinDateStr ? new Date(joinDateStr) : new Date();
+
             const memberData = {
                 uid: newUser.uid,
                 email: email,
@@ -969,7 +981,8 @@ if (addMemberForm) {
                     phone: document.getElementById('nomPhone').value || 'N/A',
                     address: document.getElementById('nomAddress').value || 'N/A'
                 },
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: firebase.firestore.Timestamp.fromDate(joinDate),
+                excludedProfit: 0 // Optional legacy field, now dynamic
             };
 
             await db.collection('users').doc(newUser.uid).set(memberData);
@@ -1050,10 +1063,10 @@ window.calculateDepositTotal = () => {
 window.toggleCustomDropdown = (id) => {
     // Close others
     document.querySelectorAll('.custom-dropdown-list').forEach(list => {
-        if(list.id !== id) list.classList.remove('active');
+        if (list.id !== id) list.classList.remove('active');
     });
     const list = document.getElementById(id);
-    if(list) list.classList.toggle('active');
+    if (list) list.classList.toggle('active');
 };
 
 // Close dropdowns when clicking outside
@@ -1068,9 +1081,9 @@ document.addEventListener('click', (e) => {
 window.updateMonthSelection = () => {
     const selected = document.querySelectorAll('.month-check:checked');
     const label = document.getElementById('monthDropdownLabel');
-    if(selected.length === 0) {
+    if (selected.length === 0) {
         label.innerText = 'Select Months...';
-    } else if(selected.length === 1) {
+    } else if (selected.length === 1) {
         label.innerText = selected[0].value;
     } else {
         label.innerText = `${selected.length} Months Selected`;
@@ -1081,9 +1094,9 @@ window.updateMonthSelection = () => {
 window.updateExtraSelection = () => {
     const selected = document.querySelectorAll('.extra-check:checked');
     const label = document.getElementById('extraDropdownLabel');
-    if(selected.length === 0) {
+    if (selected.length === 0) {
         label.innerText = 'Select Term...';
-    } else if(selected.length === 1) {
+    } else if (selected.length === 1) {
         label.innerText = selected[0].value;
     } else {
         label.innerText = `${selected.length} Terms Selected`;
@@ -1094,7 +1107,7 @@ window.updateExtraSelection = () => {
 // Toggle all left here just in case legacy UI is cached
 window.toggleAllMonths = () => {
     const checks = document.querySelectorAll('.month-check:not(:disabled)');
-    if(checks.length === 0) return;
+    if (checks.length === 0) return;
     const allChecked = Array.from(checks).every(c => c.checked);
     checks.forEach(c => c.checked = !allChecked);
     window.updateMonthSelection();
@@ -1112,7 +1125,7 @@ window.renderDepositOptions = () => {
 
     const currentYear = new Date().getFullYear();
     const nextYear = currentYear + 1;
-    
+
     // Population helper
     const addYearHeader = (container, year) => {
         const header = document.createElement('div');
@@ -1138,15 +1151,15 @@ window.renderDepositOptions = () => {
     // December 2025 specifically
     addYearHeader(monthList, 2025);
     addOption(monthList, 'month', 'December 2025', 'December 2025');
-    
+
 
     // Current and Next Year
     [currentYear, nextYear].forEach(year => {
         if (year <= 2025) return; // Already handled 2025
-        
+
         addYearHeader(monthList, year);
         MONTH_NAMES.forEach(m => addOption(monthList, 'month', `${m} ${year}`, `${m} ${year}`));
-        
+
         addYearHeader(extraList, year);
         addOption(extraList, 'extra', `January-June ${year}`, `January-June ${year}`);
         addOption(extraList, 'extra', `July-December ${year}`, `July-December ${year}`);
@@ -1158,20 +1171,20 @@ window.applyDisabledStatusToDropdowns = () => {
     const paidMonthlyStrings = _currentUserDeposits
         .filter(d => d.type === 'Monthly Deposit')
         .map(d => `${d.month} ${d.year}`);
-        
+
     document.querySelectorAll('.month-check').forEach(c => {
         const parts = c.value.split(' ');
         const monthName = parts[0];
         const year = parseInt(parts[1]);
         const monthIdx = MONTH_NAMES.indexOf(monthName);
-        
+
         let shouldDisable = paidMonthlyStrings.includes(c.value);
-        
+
         // Also disable if before join date
         if (!shouldDisable && _currentUserJoinDate) {
             const jYear = _currentUserJoinDate.getFullYear();
             const jMonthIdx = _currentUserJoinDate.getMonth(); // 0-11
-            
+
             if (year < jYear || (year === jYear && monthIdx < jMonthIdx)) {
                 shouldDisable = true;
             }
@@ -1190,12 +1203,12 @@ window.applyDisabledStatusToDropdowns = () => {
             c.closest('.dropdown-item-row').title = "";
         }
     });
-    
+
     // Disable extra terms
     const paidExtraStrings = _currentUserDeposits
         .filter(d => d.type === 'Extra Deposit')
         .map(d => `${d.month} ${d.year}`);
-        
+
     document.querySelectorAll('.extra-check').forEach(c => {
         if (paidExtraStrings.includes(c.value)) {
             c.checked = false;
@@ -1220,13 +1233,13 @@ window.openDepositModal = async () => {
 
     // Reset form and custom dropdowns
     const depositFormEl = document.getElementById('depositForm');
-    if(depositFormEl) depositFormEl.reset();
+    if (depositFormEl) depositFormEl.reset();
     document.querySelectorAll('.custom-chk').forEach(c => c.checked = false);
     document.getElementById('monthDropdownLabel').innerText = 'Select Months...';
     document.getElementById('extraDropdownLabel').innerText = 'Select Term...';
 
     depositModal.style.display = 'flex';
-    if(currentUser) {
+    if (currentUser) {
         try {
             // Fetch user join date
             const userDoc = await db.collection('users').doc(currentUser.uid).get();
@@ -1238,7 +1251,7 @@ window.openDepositModal = async () => {
             const depsSnap = await db.collection('deposits')
                 .where('uid', '==', currentUser.uid)
                 .get();
-            
+
             _currentUserDeposits = [];
             depsSnap.forEach(doc => {
                 const data = doc.data();
@@ -1250,7 +1263,7 @@ window.openDepositModal = async () => {
             const totalAdmissionPaid = _currentUserDeposits
                 .filter(d => d.type === 'Admission Fee')
                 .reduce((sum, d) => sum + (d.amount || 0), 0);
-            
+
             const admSection = document.getElementById('admFeeSection');
             if (admSection) {
                 if (totalAdmissionPaid >= REQUIRED_ADMISSION_FEE) {
@@ -1264,7 +1277,7 @@ window.openDepositModal = async () => {
             }
             window.applyDisabledStatusToDropdowns();
             window.calculateDepositTotal();
-        } catch(e) {
+        } catch (e) {
             console.error("Checking deposits:", e);
         }
     }
@@ -1318,7 +1331,7 @@ if (depositForm) {
     depositForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button[type="submit"]');
-        
+
         const totalAmount = parseFloat(document.getElementById('depAmount').value) || 0;
         if (totalAmount <= 0) {
             alert("Please select at least one item or enter an amount.");
@@ -1376,10 +1389,10 @@ if (depositForm) {
             // 4. Other
             const otherAmount = parseFloat(document.getElementById('otherAmount').value) || 0;
             if (otherAmount > 0) {
-                batchDocs.push({ 
-                    type: 'Other', 
-                    amount: otherAmount, 
-                    month: 'N/A', 
+                batchDocs.push({
+                    type: 'Other',
+                    amount: otherAmount,
+                    month: 'N/A',
                     year: 'N/A',
                     description: document.getElementById('otherNote').value || 'Other Deposit'
                 });
@@ -1452,14 +1465,14 @@ function loadPendingDeposits() {
             batches[bid].totalAmount += (d.amount || 0);
         });
 
-        list.innerHTML = Object.values(batches).sort((a,b) => {
+        list.innerHTML = Object.values(batches).sort((a, b) => {
             const timeA = a.timestamp?.seconds || 0;
             const timeB = b.timestamp?.seconds || 0;
             return timeB - timeA;
         }).map(batch => {
-            const dateStr = batch.date || (batch.timestamp ? new Date(batch.timestamp.seconds * 1000).toLocaleDateString() : 'N/A');
+            const dateStr = batch.date || (batch.timestamp ? formatDate(batch.timestamp) : 'N/A');
             const displayName = userNamesMap[batch.uid] || batch.userName || batch.userEmail;
-            
+
             const itemsHtml = batch.items.map(it => {
                 const desc = it.type === 'Other' ? (it.description || 'Other') : (it.month === 'N/A' ? '' : `${it.month} ${it.year}`);
                 return `<li style="font-size: 0.8rem; color: var(--text-main); margin-bottom: 3px; list-style-type: none;">
@@ -1512,13 +1525,13 @@ function loadPendingDeposits() {
 
 window.approveBatch = async (batchId, uid, totalAmount) => {
     if (uid === currentUser.uid) {
-        alert(currentLang === 'bn' ? "আপনি নিজের ডিপোজিট নিজে এপ্রুভ করতে পারবেন না।" : "You cannot approve your own deposit.");
+        alert(currentLang === 'bn' ? "Ã Â¦â€ Ã Â¦ÂªÃ Â¦Â¨Ã Â¦Â¿ Ã Â¦Â¨Ã Â¦Â¿Ã Â¦Å“Ã Â§â€¡Ã Â¦Â° Ã Â¦Â¡Ã Â¦Â¿Ã Â¦ÂªÃ Â§â€¹Ã Â¦Å“Ã Â¦Â¿Ã Â¦Å¸ Ã Â¦Â¨Ã Â¦Â¿Ã Â¦Å“Ã Â§â€¡ Ã Â¦ÂÃ Â¦ÂªÃ Â§ÂÃ Â¦Â°Ã Â§ÂÃ Â¦Â­ Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¤Ã Â§â€¡ Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â°Ã Â¦Â¬Ã Â§â€¡Ã Â¦Â¨ Ã Â¦Â¨Ã Â¦Â¾Ã Â¥Â¤" : "You cannot approve your own deposit.");
         return;
     }
     if (!confirm(`Are you sure you want to approve this batch payment of Tk ${formatNumber(totalAmount).replace('Tk ', '')}?`)) return;
     try {
         const userRef = db.collection('users').doc(uid);
-        
+
         // Find all pending docs in this batch to process them all
         let snapshot;
         if (batchId.startsWith('batch_')) {
@@ -1537,7 +1550,7 @@ window.approveBatch = async (batchId, uid, totalAmount) => {
             const userDoc = await transaction.get(userRef);
             let currentBalance = userDoc.exists ? (userDoc.data().balance || 0) : 0;
             let currentSavings = userDoc.exists ? (userDoc.data().savings || 0) : 0;
-            
+
             // Update Global Stats
             const statsRef = db.collection('system').doc('stats');
             const statsDoc = await transaction.get(statsRef);
@@ -1554,7 +1567,7 @@ window.approveBatch = async (batchId, uid, totalAmount) => {
             // Update Dues Cache on User Doc
             const userData = userDoc.data() || {};
             const dues = userData.dues || { admissionPaid: 0, monthlyPaidCount: 0, extraTermsPaid: [] };
-            
+
             snapshot.forEach(doc => {
                 const item = doc.data();
                 if (item.type === 'Admission Fee') dues.admissionPaid += (item.amount || 0);
@@ -1563,7 +1576,7 @@ window.approveBatch = async (batchId, uid, totalAmount) => {
                     const term = `${item.month} ${item.year}`;
                     if (!dues.extraTermsPaid.includes(term)) dues.extraTermsPaid.push(term);
                 }
-                transaction.update(doc.ref, { 
+                transaction.update(doc.ref, {
                     status: 'approved',
                     approvedBy: userNamesMap[currentUser.uid] || currentUser.email
                 });
@@ -1620,6 +1633,38 @@ db.collection('deposits').where('status', '==', 'approved').onSnapshot(snapshot 
     });
 });
 
+// Helper to calculate historical missing Extra Deposit terms
+window.getMissingExtraTerms = function (joinDate, extraPaidArray) {
+    if (!joinDate) return [];
+    const today = new Date();
+    const currYear = today.getFullYear();
+    const currMonIdx = today.getMonth();
+    const jYear = joinDate.getFullYear();
+    const jMon = joinDate.getMonth();
+
+    let missing = [];
+    for (let y = jYear; y <= currYear; y++) {
+        // Term 1 (Jan-Jun) - Due from June (idx 5) onwards
+        if (y < currYear || (y === currYear && currMonIdx >= 5)) {
+            // If they joined in the same year, but AFTER June, they don't owe Term 1 for that year.
+            if (!(y === jYear && jMon > 5)) {
+                if (!extraPaidArray.some(t => t.includes('January-June') && t.includes(y.toString()))) {
+                    missing.push(`Term 1 (${y})`);
+                }
+            }
+        }
+        // Term 2 (Jul-Dec) - Due from December (idx 11) onwards
+        if (y < currYear || (y === currYear && currMonIdx >= 11)) {
+            if (!(y === jYear && jMon > 11)) {
+                if (!extraPaidArray.some(t => t.includes('July-December') && t.includes(y.toString()))) {
+                    missing.push(`Term 2 (${y})`);
+                }
+            }
+        }
+    }
+    return missing;
+};
+
 function loadAllUsers() {
     // 1. Listen to user changes
     db.collection('users').onSnapshot(async (snapshot) => {
@@ -1632,9 +1677,9 @@ function loadAllUsers() {
             userNamesMap[doc.id] = doc.data().name || doc.data().email;
         });
 
-        if (snapshot.empty) { 
-            if (list) list.innerHTML = 'No users.'; 
-            return; 
+        if (snapshot.empty) {
+            if (list) list.innerHTML = 'No users.';
+            return;
         }
 
         const userStats = _approvedDepositsCache;
@@ -1653,14 +1698,14 @@ function loadAllUsers() {
 
         if (!list) return;
         list.innerHTML = '';
-        
+
         userDocs.forEach(u => {
             const joinDate = u.createdAt ? new Date(u.createdAt.seconds * 1000) : new Date();
-            
+
             // Preference: Use the cached dues object on the user doc. 
             // Fallback: Use the (legacy) global deposits cache for users not yet migrated.
             const dues = u.dues || _approvedDepositsCache[u.id] || { admissionPaid: 0, monthlyPaidCount: 0, monthlyMonths: [], extraTermsPaid: [], extraTerms: [] };
-            
+
             const monthlyPaidCount = dues.monthlyPaidCount ?? (dues.monthlyMonths ? dues.monthlyMonths.length : 0);
             const admissionTotal = dues.admissionPaid ?? (dues.admissionTotal || 0);
             const extraTerms = dues.extraTermsPaid || dues.extraTerms || [];
@@ -1674,20 +1719,17 @@ function loadAllUsers() {
             const hasAdmissionDue = admissionTotal < REQUIRED_ADMISSION_FEE;
 
             let hasExtraDueIndicator = false;
-            const curMonthStr = currentMonthIdx < 5 ? "" : (currentMonthIdx >= 11 ? "July-December" : "January-June"); 
-            
-            const term1Found = extraTerms.some(t => t.includes('January-June') && t.includes(currentYear.toString()));
-            if (!term1Found && currentMonthIdx >= 5) hasExtraDueIndicator = true;
+            const missingExtraTerms = window.getMissingExtraTerms(joinDate, extraTerms);
 
-            if (currentMonthIdx >= 6) {
-                const term2Found = extraTerms.some(t => t.includes('July-December') && t.includes(currentYear.toString()));
-                if (!term2Found && currentMonthIdx >= 11) hasExtraDueIndicator = true;
+            // Ã Â¦Â²Ã Â¦Â¾Ã Â¦â€¡Ã Â¦Å¸ Ã Â¦Â¶Ã Â§ÂÃ Â¦Â§Ã Â§Â Ã Â¦Å“Ã Â§ÂÃ Â¦Â¨ (idx=5) Ã Â¦â€œ Ã Â¦Â¡Ã Â¦Â¿Ã Â¦Â¸Ã Â§â€¡Ã Â¦Â®Ã Â§ÂÃ Â¦Â¬Ã Â¦Â° (idx=11) Ã Â¦Â®Ã Â¦Â¾Ã Â¦Â¸Ã Â§â€¡ Ã Â¦Å“Ã Â§ÂÃ Â¦Â¬Ã Â¦Â²Ã Â¦Â¬Ã Â§â€¡ - Ã Â¦Â¯Ã Â¦Â¦Ã Â¦Â¿ extra due Ã Â¦Â¥Ã Â¦Â¾Ã Â¦â€¢Ã Â§â€¡
+            if (missingExtraTerms.length > 0 && (currentMonthIdx === 5 || currentMonthIdx === 11)) {
+                hasExtraDueIndicator = true;
             }
 
             const loggedInEmail = (auth.currentUser && auth.currentUser.email) ? auth.currentUser.email.toLowerCase().trim() : '';
             const thisUserEmail = u.email ? u.email.toLowerCase().trim() : '';
             const isSelf = loggedInEmail === thisUserEmail;
-            
+
             // SECURITY: Only Owners, Admins, and Managers can see dues indicators for others.
             // Regular members can only see their own dues.
             const canSeeDues = isSelf || ['owner', 'admin', 'manager'].includes(userRole);
@@ -1762,7 +1804,7 @@ window.openMemberProfile = async (uid, data, monthsDue = 0, joinDateParam = null
                 </div>
                 <div class="profile-info-item">
                     <label class="form-label">Join Date</label>
-                    <p style="font-weight: 700; color: var(--text-main); font-size: 1.1rem; padding-left: 5px;">${jDate.toLocaleDateString()}</p>
+                    <p style="font-weight: 700; color: var(--text-main); font-size: 1.1rem; padding-left: 5px;">${formatDate(jDate)}</p>
                 </div>
                 <div class="profile-info-item">
                     <label class="form-label">Address</label>
@@ -1898,25 +1940,18 @@ window.openMemberProfile = async (uid, data, monthsDue = 0, joinDateParam = null
                     profMonEl.style.color = mDue > 0 ? '#EF4444' : 'var(--success)';
                 }
 
-                // 3. Extra Due
-                let extraDueList = [];
-                let hasAlertDue = false;
-                const t1Exp = `January-June ${currYear}`;
-                if (!extraFound.includes(t1Exp)) {
-                    extraDueList.push('Term 1 (Jan-Jun)');
-                    if (currMonIdx >= 5) hasAlertDue = true;
-                }
-                if (currMonIdx >= 6) {
-                    const t2Exp = `July-December ${currYear}`;
-                    if (!extraFound.includes(t2Exp)) {
-                        extraDueList.push('Term 2 (Jul-Dec)');
-                        if (currMonIdx >= 11) hasAlertDue = true;
-                    }
-                }
+                // 3. Extra Due - getMissingExtraTerms Ã Â¦Â¦Ã Â¦Â¿Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¡ Ã Â¦Â¸Ã Â¦Â Ã Â¦Â¿Ã Â¦â€¢Ã Â¦Â­Ã Â¦Â¾Ã Â¦Â¬Ã Â§â€¡ Ã Â¦Â¸Ã Â¦Â¬ Ã Â¦Â¬Ã Â¦â€ºÃ Â¦Â°Ã Â§â€¡Ã Â¦Â° term check Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¾ Ã Â¦Â¹Ã Â¦Å¡Ã Â§ÂÃ Â¦â€ºÃ Â§â€¡
+                const profileJoinDate = jDate instanceof Date ? jDate : new Date(jDate);
+                const extraDueList = window.getMissingExtraTerms(profileJoinDate, extraFound);
                 const profExtraEl = document.getElementById('profExtraDue');
                 if (profExtraEl) {
-                    profExtraEl.innerText = extraDueList.length > 0 ? extraDueList.join(', ') + ' Due' : 'Paid';
-                    profExtraEl.style.color = hasAlertDue ? '#8B5CF6' : (extraDueList.length > 0 ? '#94a3b8' : 'var(--success)');
+                    if (extraDueList.length > 0) {
+                        profExtraEl.innerText = extraDueList.join(', ') + ' Due';
+                        profExtraEl.style.color = '#8B5CF6';
+                    } else {
+                        profExtraEl.innerText = 'Paid';
+                        profExtraEl.style.color = 'var(--success)';
+                    }
                 }
             } catch (err) { console.error("Profile Dues Error:", err); }
         })();
@@ -1968,7 +2003,7 @@ window.openMemberProfile = async (uid, data, monthsDue = 0, joinDateParam = null
             delBtn.style.background = 'var(--error)';
             delBtn.style.color = 'white';
             delBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete Member';
-            delBtn.onclick = () => initiateMemberDeletion(uid, data.savings || 0, data.profitPercentage || 100);
+            delBtn.onclick = () => initiateMemberDeletion(uid, data.savings || 0, data.profitPercentage || 100, data.excludedProfit || 0);
             btnContainer.appendChild(delBtn);
         }
     }
@@ -2118,7 +2153,7 @@ if (editProfileForm) {
 
 // --- MEMBER DELETION & COMPANY ACCOUNT LOGIC ---
 
-window.initiateMemberDeletion = async (uid, totalSavings, profitPercentage = 100) => {
+window.initiateMemberDeletion = async (uid, totalSavings, profitPercentage = 100, excludedProfit = 0) => {
     document.getElementById('delMemberUid').value = uid;
     document.getElementById('delMemberTotalSavings').value = totalSavings;
     document.getElementById('delSavingsDisplay').innerText = formatNumber(totalSavings);
@@ -2135,7 +2170,8 @@ window.initiateMemberDeletion = async (uid, totalSavings, profitPercentage = 100
 
         let estimatedProfit = 0;
         if (globalSavings > 0) {
-            estimatedProfit = ((totalSavings / globalSavings) * globalProfit) * (profitPercentage / 100);
+            const effectiveProfit = Math.max(0, globalProfit - excludedProfit);
+            estimatedProfit = ((totalSavings / globalSavings) * effectiveProfit) * (profitPercentage / 100);
         }
 
         document.getElementById('delMemberTotalProfit').value = estimatedProfit;
@@ -2183,24 +2219,43 @@ if (deleteMemberForm) {
             let currentGlobalSavings = 0;
             allUsersSnap.forEach(doc => { currentGlobalSavings += (doc.data().savings || 0); });
 
+            // Fetch finished investments to calculate dynamic exclusion
+            const finishedInvs = [];
+            const invSnap = await db.collection('investments').where('status', 'in', ['completed', 'withdrawn']).get();
+            invSnap.forEach(doc => finishedInvs.push(doc.data()));
+
             await db.runTransaction(async (transaction) => {
-            const userRef = db.collection('users').doc(uid);
-            const userDoc = await transaction.get(userRef);
+                const userRef = db.collection('users').doc(uid);
+                const userDoc = await transaction.get(userRef);
 
-            if (!userDoc.exists) throw new Error("User does not exist.");
-            const userData = userDoc.data();
+                if (!userDoc.exists) throw new Error("User does not exist.");
+                const userData = userDoc.data();
+                const uJoinDate = userData.createdAt ? userData.createdAt.toDate() : new Date();
+                uJoinDate.setHours(0, 0, 0, 0);
 
-            // 2. Fetch system stats inside transaction for consistency
-            const statsRef = db.collection('system').doc('stats');
-            const statsDoc = await transaction.get(statsRef);
-            const globalProfit = statsDoc.exists ? (statsDoc.data().totalProfit || 0) : 0;
+                // 2. Fetch system stats inside transaction for consistency
+                const statsRef = db.collection('system').doc('stats');
+                const statsDoc = await transaction.get(statsRef);
+                const globalProfit = statsDoc.exists ? (statsDoc.data().totalProfit || 0) : 0;
 
-            const savings = userData.savings || 0;
-            const profitPercentage = userData.profitPercentage || 100;
-            let totalPotentialProfit = 0;
-            if (currentGlobalSavings > 0) {
-                totalPotentialProfit = (savings / currentGlobalSavings) * globalProfit;
-            }
+                const savings = userData.savings || 0;
+                const profitPercentage = userData.profitPercentage || 100;
+
+                // Calculate dynamic excluded profit: profits of investments started before joining
+                let excludedProfit = 0;
+                finishedInvs.forEach(inv => {
+                    const sDate = inv.date ? new Date(inv.date) : new Date();
+                    sDate.setHours(0, 0, 0, 0);
+                    if (sDate < uJoinDate) {
+                        excludedProfit += (inv.profitAmount || 0);
+                    }
+                });
+
+                let totalPotentialProfit = 0;
+                if (currentGlobalSavings > 0) {
+                    const effectiveProfit = Math.max(0, globalProfit - excludedProfit);
+                    totalPotentialProfit = (savings / currentGlobalSavings) * effectiveProfit;
+                }
                 const profitShare = totalPotentialProfit * (profitPercentage / 100);
                 const companyDivertedProfit = totalPotentialProfit - profitShare;
 
@@ -2383,7 +2438,7 @@ if (expenseForm) {
             alert("Error: " + error.message);
         } finally {
             btn.disabled = false;
-            btn.innerText = currentLang === 'bn' ? 'খরচ সংরক্ষণ করুন' : 'Save Expense';
+            btn.innerText = currentLang === 'bn' ? 'Ã Â¦â€“Ã Â¦Â°Ã Â¦Å¡ Ã Â¦Â¸Ã Â¦â€šÃ Â¦Â°Ã Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â¦Â£ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨' : 'Save Expense';
         }
     });
 }
@@ -2490,7 +2545,7 @@ window.deleteAnnouncement = async (id) => {
         alert("Error deleting announcement: " + error.message);
     }
 };
-// Note: loadAnnouncements() is called inside openAnnouncements() — no need to run it globally on page load.
+// Note: loadAnnouncements() is called inside openAnnouncements() Ã¢â‚¬â€ no need to run it globally on page load.
 
 const investForm = document.getElementById('investForm');
 if (investForm) {
@@ -2720,7 +2775,7 @@ if (withdrawForm) {
 
                 // 2. Update global stats
                 const current = statsDoc.exists ? statsDoc.data() : { totalProfit: 0, totalInvestments: 0 };
-                transaction.set(statsRef, { 
+                transaction.set(statsRef, {
                     totalProfit: (current.totalProfit || 0) + profit,
                     totalInvestments: Math.max(0, (current.totalInvestments || 0) - principal)
                 }, { merge: true });
@@ -2768,7 +2823,7 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
     const t = translations[currentLang] || translations['en'];
 
     modal.style.display = 'flex';
-    contentEl.innerHTML = `<div style="text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'লোড হচ্ছে...' : 'Loading statement...'}</div>`;
+    contentEl.innerHTML = `<div style="text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'স্টেটমেন্ট লোড হচ্ছে...' : 'Loading statement...'}</div>`;
 
     try {
         titleEl.innerText = t['report-member-statement'] || "Member Statement";
@@ -2786,9 +2841,25 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
 
         const userSavings = data.savings || 0;
         const profitPercentage = data.profitPercentage || 100;
+        const uJoinDate = data.createdAt ? data.createdAt.toDate() : new Date();
+        uJoinDate.setHours(0, 0, 0, 0);
+
+        // Dynamic excluded profit: Profits of all finished investments started before joining
+        let excludedProfit = 0;
+        const invSnap = await db.collection('investments').where('status', 'in', ['completed', 'withdrawn']).get();
+        invSnap.forEach(doc => {
+            const inv = doc.data();
+            const sDate = inv.date ? new Date(inv.date) : new Date();
+            sDate.setHours(0, 0, 0, 0);
+            if (sDate < uJoinDate) {
+                excludedProfit += (inv.profitAmount || 0);
+            }
+        });
+
         let profitShare = 0;
         if (totalSavings > 0) {
-            profitShare = (userSavings / totalSavings) * totalProfit * (profitPercentage / 100);
+            const effectiveProfit = Math.max(0, totalProfit - excludedProfit);
+            profitShare = (userSavings / totalSavings) * effectiveProfit * (profitPercentage / 100);
         }
 
         // Fetch deposits for the history table
@@ -2828,7 +2899,9 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
         const admDue = Math.max(0, REQUIRED_ADMISSION_FEE - adminTotal);
 
         let extraDueList = [];
+        let extraDepositDue = false;
         if (currMonIdx >= 5) { // June or later
+            extraDepositDue = true;
             const t1Expected = `January-June ${currYear}`;
             if (!extraFound.includes(t1Expected)) extraDueList.push('Term 1 (Jan-Jun)');
         }
@@ -2848,12 +2921,12 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
                     <div class="report-table-wrapper">
                         <table class="report-table">
                             <thead>
-                                <tr><th>${t['label-month'] || 'Month/Year'}</th><th>${t['label-amount'] || 'Amount'}</th><th>${t['label-date'] || 'Date'}</th><th>${currentLang === 'bn' ? 'রিসিট' : 'Receipt'}</th></tr>
+                                <tr><th>${t['label-month'] || 'Month/Year'}</th><th>${t['label-amount'] || 'Amount'}</th><th>${t['label-date'] || 'Date'}</th><th>${currentLang === 'bn' ? 'রসিদ' : 'Receipt'}</th></tr>
                             </thead>
                             <tbody>
                                 ${depsList.map(d => {
                 return `<tr>
-                    <td>${currentLang === 'bn' ? d.month.replace('January', 'জানুয়ারি').replace('February', 'ফেব্রুয়ারি').replace('March', 'মার্চ').replace('April', 'এপ্রিল').replace('May', 'মে').replace('June', 'জুন').replace('July', 'জুলাই').replace('August', 'আগস্ট').replace('September', 'সেপ্টেম্বর').replace('October', 'অক্টোবর').replace('November', 'নভেম্বর').replace('December', 'ডিসেম্বর') : d.month} ${d.year}</td>
+                    <td>${currentLang === 'bn' ? d.month.replace('January', 'জানুয়ারি').replace('February', 'ফেব্রুয়ারি').replace('March', 'মার্চ').replace('April', 'এপ্রিল').replace('May', 'মে').replace('June', 'জুন').replace('July', 'জুলাই').replace('August', 'আগস্ট').replace('September', 'সেপ্টেম্বর').replace('October', 'অক্টোবর').replace('November', 'নভেম্বর').replace('December', 'ডিসেম্বর') : d.month} ${d.year}</td>
                     <td>Tk ${formatNumber(d.amount).replace('Tk ', '')}</td>
                     <td>${d.date}</td>
                     <td>
@@ -2873,13 +2946,13 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
         const html = `
             <div style="padding: 10px; font-family: 'Inter', 'SolaimanLipi', sans-serif;">
                 <!-- Header Section with Photo -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; gap: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; gap: 20px;">
                     <div style="flex: 1;">
                         <h1 style="color: var(--primary-color); margin: 0; font-size: 1.8rem;">${data.name || 'Member'}</h1>
                         <p style="color: #666; font-size: 0.95rem; margin: 5px 0;">${data.email}</p>
                         <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px; margin-top: 15px; font-size: 0.9rem;">
                             <span style="color: #888;">${t['label-phone'] || 'Phone'}:</span> <strong>${data.phone || 'N/A'}</strong>
-                            <span style="color: #888;">${t['label-join-date'] || 'Join Date'}:</span> <strong>${joinDate instanceof Date ? joinDate.toLocaleDateString(currentLang === 'bn' ? 'bn-BD' : 'en-US') : 'N/A'}</strong>
+                            <span style="color: #888;">${t['label-join-date'] || 'Join Date'}:</span> <strong>${formatDate(joinDate)}</strong>
                             <span style="color: #888;">${t['label-address'] || 'Address'}:</span> <strong>${data.address || 'N/A'}</strong>
                         </div>
                     </div>
@@ -2893,23 +2966,23 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
                 </div>
 
                 <!-- Financial Summary Cards -->
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
-                    <div style="background: var(--primary-color); color: white; padding: 20px; border-radius: 15px; text-align: center;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px;">
+                    <div style="background: var(--primary-color); color: white; padding: 12px; border-radius: 15px; text-align: center;">
                         <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin: 0;">${t['label-total-savings'] || 'Total Savings'}</p>
                         <p style="font-size: 1.4rem; font-weight: 800; margin: 5px 0;">${formatNumber(userSavings)}</p>
                     </div>
-                    <div style="background: #10b981; color: white; padding: 20px; border-radius: 15px; text-align: center;">
+                    <div style="background: #10b981; color: white; padding: 12px; border-radius: 15px; text-align: center;">
                         <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin: 0;">${t['label-profit-share'] || 'Profit Share'}</p>
                         <p style="font-size: 1.4rem; font-weight: 800; margin: 5px 0;">Tk ${formatNumber(profitShare.toFixed(2)).replace('Tk ', '')}</p>
                     </div>
-                    <div style="background: ${hasAnyDue ? '#ef4444' : '#f0fdf4'}; color: ${hasAnyDue ? 'white' : '#166534'}; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid ${hasAnyDue ? '#ef4444' : '#bbf7d0'};">
+                    <div style="background: ${hasAnyDue ? '#ef4444' : '#f0fdf4'}; color: ${hasAnyDue ? 'white' : '#166534'}; padding: 12px; border-radius: 15px; text-align: center; border: 1px solid ${hasAnyDue ? '#ef4444' : '#bbf7d0'};">
                         <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin: 0;">${t['label-status'] || 'Status'}</p>
                         <p style="font-size: 1.1rem; font-weight: 700; margin: 5px 0;">${hasAnyDue ? (t['status-dues'] || 'Dues Pending') : (t['status-regular'] || 'Regular')}</p>
                     </div>
                 </div>
 
                 <!-- Outstanding Dues Detail Section -->
-                <div style="margin-bottom: 30px; padding: 15px; background: #fffcf2; border: 1px solid #fce7f3; border-radius: 15px;">
+                <div style="margin-bottom: 15px; padding: 10px 15px; background: #fffcf2; border: 1px solid #fce7f3; border-radius: 15px;">
                     <h3 style="font-size: 0.9rem; color: #db2777; margin: 0 0 10px 0; border-bottom: 1px solid #fdf2f8; padding-bottom: 5px;">${t['label-outstanding-breakdown'] || 'Outstanding Fees Breakdown'}</h3>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                         <div style="padding: 10px; background: #fef2f2; border-radius: 10px; border: 1px solid #fee2e2;">
@@ -2922,14 +2995,14 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
                         </div>
                         <div style="padding: 10px; background: #f5f3ff; border-radius: 10px; border: 1px solid #ede9fe;">
                             <p style="font-size: 0.7rem; color: #8b5cf6; margin: 0; font-weight: 600;">${t['extra-deposit'] || 'Extra Deposit'}</p>
-                            <p style="font-weight: 700; margin: 3px 0; font-size: 0.9rem;">${extraDueList.length > 0 ? extraDueList.join(', ') : (t['label-paid'] || 'Paid')}</p>
+                            <p style="font-weight: 700; margin: 3px 0; font-size: 0.9rem;">${extraDueList.length > 0 ? extraDueList.join(', ') : (extraDepositDue ? (t['label-paid'] || 'Paid') : (currentLang === 'bn' ? 'এখনো বাকি নেই' : 'Not Due Yet'))}</p>
                         </div>
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
                     <!-- Nominee Section -->
-                    <div style="background: #fbfbfb; padding: 20px; border-radius: 15px; border: 1px solid #eee;">
+                    <div style="background: #fbfbfb; padding: 15px; border-radius: 15px; border: 1px solid #eee;">
                         <h3 style="font-size: 1rem; color: var(--primary-color); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">${t['label-nominee-info'] || 'Nominee Information'}</h3>
                         <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 15px; font-size: 0.9rem;">
                             <span style="color: #888;">${t['label-name'] || 'Name'}:</span> <strong>${data.nominee?.name || 'N/A'}</strong>
@@ -2938,20 +3011,20 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
                             <span style="color: #888;">${t['label-address'] || 'Address'}:</span> <strong>${data.nominee?.address || 'N/A'}</strong>
                         </div>
                         ${data.nomineePhoto ? `
-                        <div style="margin-top: 15px; text-align: center;">
-                            <p style="font-size: 0.75rem; color: #888; margin-bottom: 5px;">${currentLang === 'bn' ? 'নমিনীর ছবি' : 'Nominee Photo'}</p>
-                            <img src="${data.nomineePhoto}" alt="Nominee" style="width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 1px solid #ddd;">
+                        <div style="margin-top: 10px; text-align: center;">
+                            <p style="font-size: 0.75rem; color: #888; margin-bottom: 5px;">${currentLang === 'bn' ? 'নমিনীয়ার ছবি' : 'Nominee Photo'}</p>
+                            <img src="${data.nomineePhoto}" alt="Nominee" style="width: 80px; height: 80px; border-radius: 10px; object-fit: cover; border: 1px solid #ddd;">
                         </div>
                         ` : ''}
                     </div>
                     
                     <!-- ID Documents Preview -->
-                    <div style="background: #fbfbfb; padding: 20px; border-radius: 15px; border: 1px solid #eee;">
-                        <h3 style="font-size: 1rem; color: var(--primary-color); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">${t['label-nid-doc'] || 'ID Document (NID)'}</h3>
+                    <div style="background: #fbfbfb; padding: 15px; border-radius: 15px; border: 1px solid #eee;">
+                        <h3 style="font-size: 1rem; color: var(--primary-color); margin-top: 0; margin-bottom: 10px; border-bottom: 2px solid #f0f0f0; padding-bottom: 5px;">${t['label-nid-doc'] || 'ID Document (NID)'}</h3>
                         <div style="text-align: center;">
                             ${data.nidURL ?
-                `<img src="${data.nidURL}" alt="NID" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">` :
-                `<div style="padding: 40px; background: #eee; border-radius: 8px; color: #999;"><i class="fa-solid fa-address-card fa-4x"></i><p style="font-size: 0.8rem; margin-top: 10px;">${currentLang === 'bn' ? 'এনআইডি আপলোড করা হয়নি' : 'No NID Uploaded'}</p></div>`
+                `<img src="${data.nidURL}" alt="NID" style="max-width: 100%; max-height: 180px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">` :
+                `<div style="padding: 40px; background: #eee; border-radius: 8px; color: #999;"><i class="fa-solid fa-address-card fa-4x"></i><p style="font-size: 0.8rem; margin-top: 10px;">${currentLang === 'bn' ? 'এনআইডি আপলোড করা হয়নি' : 'No NID Uploaded'}</p></div>`
             }
                         </div>
                     </div>
@@ -2962,10 +3035,18 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
         `;
 
         const contentHtml = `
-            <div id="statementExportArea" data-theme="light" style="padding: 40px; background: white; color: #1A2D24; width: 800px; margin: 0 auto; font-family: 'Outfit', 'Inter', 'SolaimanLipi', sans-serif;">
-                <div style="text-align: center; margin-bottom: 40px; position: relative;">
+            <div id="statementExportArea" data-theme="light" style="padding: 20px 40px; background: white; color: #1A2D24; width: 800px; margin: 0 auto; font-family: 'Outfit', 'Inter', 'SolaimanLipi', sans-serif;">
+                <div style="text-align: center; margin-bottom: 20px; position: relative;">
                     <div style="position: absolute; top: 0; right: 0; font-size: 0.65rem; color: #ccc;">${t['label-member-uid'] || 'Member UID'}: ${uid}</div>
-                    <h1 style="color: var(--primary-color); margin: 0; text-transform: uppercase; letter-spacing: 4px; font-size: 2.5rem; font-weight: 800;">GROW HALAL</h1>
+                        <style>@font-face {
+                                font-family: 'GrowWestInline'; src: url('${new URL('GrowWestRegular-vm1qA.ttf', window.location.href).href}');
+                                font-weight: normal; font-style: normal;
+                            }
+                        </style>
+<div class="logo" style="display: flex; align-items: center; justify-content: center; gap: 6px; font-family: 'GrowWestInline', sans-serif; margin-bottom: 20px;">
+<img src="${new URL('logo.png', window.location.href).href}" style="height: 80px; width: auto; object-fit: contain;">
+<span style="font-size: 2.5rem; color: #1A2D24; white-space: nowrap; text-transform: lowercase;">Grow Halal</span>
+</div>
                     <p style="margin: 5px 0; font-weight: 600; color: #444; letter-spacing: 1.5px; text-transform: uppercase; font-size: 0.8rem;">${t['label-official-report'] || 'Official Member Comprehensive Report'}</p>
                     <div style="width: 80px; height: 4px; background: var(--primary-color); margin: 15px auto;"></div>
                     <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">${t['label-report-date'] || 'Report Date'}: ${new Date().toLocaleString(currentLang === 'bn' ? 'bn-BD' : 'en-US')}</div>
@@ -2977,14 +3058,14 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
 
                 <div style="margin-top: 80px; padding-top: 30px; border-top: 2px solid #f0f0f0; display: flex; justify-content: space-between; align-items: flex-end;">
                     <div style="text-align: left; font-size: 0.75rem; color: #999;">
-                        <p style="margin: 2px 0;">${currentLang === 'bn' ? 'এই ডকুমেন্টটি গ্রো হালাল-এর একটি অফিসিয়াল রেকর্ড।' : 'This document is an official record of Grow Halal.'}</p>
+                        <p style="margin: 2px 0;">${currentLang === 'bn' ? 'এই ডকুমেন্টটি গ্রো হালাল-এর একটি অফিসিয়াল রেকর্ড।' : 'This document is an official record of Grow Halal.'}</p>
                         <p style="margin: 2px 0;">${currentLang === 'bn' ? 'প্রস্তুতকারক (সিস্টেম):' : 'Generated by System:'} ${auth.currentUser.email}</p>
                     </div>
                     </div>
                 </div>
             </div>
         `;
-        
+
         if (downloadOnly) {
             const filename = `Statement_${data.name || 'Member'}_${new Date().toISOString().split('T')[0]}.pdf`;
             await generatePDFFromHTML(contentHtml, filename, t['report-member-audit'] || 'Member Statement');
@@ -2996,7 +3077,7 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
         downloadBtn.onclick = async () => {
             const originalBtnText = downloadBtn.innerHTML;
             downloadBtn.disabled = true;
-            downloadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'এক্সপোর্ট হচ্ছে...' : 'Exporting...'}`;
+            downloadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'Ã Â¦ÂÃ Â¦â€¢Ã Â§ÂÃ Â¦Â¸Ã Â¦ÂªÃ Â§â€¹Ã Â¦Â°Ã Â§ÂÃ Â¦Å¸ Ã Â¦Â¹Ã Â¦Å¡Ã Â§ÂÃ Â¦â€ºÃ Â§â€¡...' : 'Exporting...'}`;
 
             const element = document.getElementById('statementExportArea');
             if (!element) return;
@@ -3049,7 +3130,7 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
                 printFrame.contentWindow.print();
                 setTimeout(() => document.body.removeChild(printFrame), 1000);
             }, 800);
-            
+
             downloadBtn.disabled = false;
             downloadBtn.innerHTML = originalBtnText;
 
@@ -3064,7 +3145,7 @@ window.viewMemberStatement = async (uid, data, monthsDue, joinDate, downloadOnly
 window.generatePDFFromHTML = async (html, filename, title = "Report", orientation = 'portrait') => {
     // We use a hidden iframe native browser print API for perfect PDF rendering with Bangla fonts
     // Users can simply select "Save as PDF" in the browser dialog.
-    
+
     return new Promise((resolve) => {
         const printFrame = document.createElement('iframe');
         printFrame.style.position = 'fixed';
@@ -3077,7 +3158,7 @@ window.generatePDFFromHTML = async (html, filename, title = "Report", orientatio
 
         const cssOrientation = orientation === 'landscape' ? 'landscape' : 'portrait';
         const frameDoc = printFrame.contentWindow.document;
-        
+
         frameDoc.open();
         frameDoc.write(`
             <html>
@@ -3102,20 +3183,47 @@ window.generatePDFFromHTML = async (html, filename, title = "Report", orientatio
                         border-bottom: 2px solid #2D5A47; 
                         padding-bottom: 10px; 
                     }
-                    .export-header h1 { color: #2D5A47 !important; margin: 0; font-size: 24px; }
+                    .export-header h1 { color: #2D5A47 !important; font-size: 24px; }
                     .export-header p.title { margin: 5px 0; font-size: 14px; color: #333 !important; font-weight: bold; }
                     .export-header p.date { margin: 0; font-size: 10px; color: #666 !important; }
                     
                     .report-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95rem; }
                     .report-table th { background-color: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; padding: 10px; text-align: left; font-weight: bold; }
                     .report-table td { border: 1px solid #e2e8f0 !important; padding: 10px; }
+                    @font-face {
+                        font-family: 'GrowWestInline';
+                        src: url('${new URL('GrowWestRegular-vm1qA.ttf', window.location.href).href}');
+                        font-weight: normal;
+                        font-style: normal;
+                    }
+                    .logo {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        gap: 6px;
+                        margin-bottom: 20px;
+                    }
+                    .logo img {
+                        height: 60px;
+                        width: auto;
+                    }
+                    .logo span {
+                        font-family: 'GrowWestInline', sans-serif;
+                        font-size: 2.2rem;
+                        color: #2D5A47;
+                        letter-spacing: 1px;
+                        text-transform: lowercase;
+                    }
                 </style>
             </head>
             <body>
                 <div class="export-header">
-                    <h1>GROW HALAL</h1>
+                    <div class="logo">
+                        <img src="logo.png" alt="Logo">
+                        <span>Grow Halal</span>
+                    </div>
                     <p class="title">${title.toUpperCase()}</p>
-                    <p class="date">${new Date().toLocaleString()}</p>
+                    <p class="date">${formatDate(new Date())}</p>
                 </div>
                 ${html}
             </body>
@@ -3150,7 +3258,7 @@ window.viewReport = async (type, fromDate = null, toDate = null, downloadOnly = 
 
     if (!downloadOnly && modal && contentEl) {
         modal.style.display = 'flex';
-        contentEl.innerHTML = `<div style="text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'লোড হচ্ছে...' : 'Loading report...'}</div>`;
+        contentEl.innerHTML = `<div style="text-align:center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'Ã Â¦Â²Ã Â§â€¹Ã Â¦Â¡ Ã Â¦Â¹Ã Â¦Å¡Ã Â§ÂÃ Â¦â€ºÃ Â§â€¡...' : 'Loading report...'}</div>`;
     }
 
     if (['investments', 'expenses'].includes(type) && !downloadOnly && filterUI) {
@@ -3177,7 +3285,7 @@ window.viewReport = async (type, fromDate = null, toDate = null, downloadOnly = 
             }
 
             if (docs.length === 0) {
-                html = `<p style="text-align:center; padding:20px; color:#666;">${currentLang === 'bn' ? 'কোন তথ্য পাওয়া যায়নি' : 'No records found'}</p>`;
+                html = `<p style="text-align:center; padding:20px; color:#666;">${currentLang === 'bn' ? 'Ã Â¦â€¢Ã Â§â€¹Ã Â¦Â¨ Ã Â¦Â¤Ã Â¦Â¥Ã Â§ÂÃ Â¦Â¯ Ã Â¦ÂªÃ Â¦Â¾Ã Â¦â€œÃ Â§Å¸Ã Â¦Â¾ Ã Â¦Â¯Ã Â¦Â¾Ã Â§Å¸Ã Â¦Â¨Ã Â¦Â¿' : 'No records found'}</p>`;
             } else {
                 html = `<table class="report-table">
                     <thead><tr><th>${t['label-date']}</th><th>${t['label-category']}</th><th>${t['label-description']}</th><th>${t['label-amount']}</th></tr></thead>
@@ -3192,12 +3300,12 @@ window.viewReport = async (type, fromDate = null, toDate = null, downloadOnly = 
             html = `<table class="report-table">
                 <thead><tr><th>${t['label-name']}</th><th>${t['label-total-savings']}</th><th>${t['label-member-profit']}</th><th>${t['label-company-share']}</th></tr></thead>
                 <tbody>${users.map(d => {
-                    const savings = d.savings || 0;
-                    const profit = (_globalSavingsSum > 0) ? (savings / _globalSavingsSum) * _globalProfitSum * (d.profitPercentage || 100) / 100 : 0;
-                    const companyScale = (100 - (d.profitPercentage || 100)) / 100;
-                    const companyShare = (_globalSavingsSum > 0) ? (savings / _globalSavingsSum) * _globalProfitSum * companyScale : 0;
-                    return `<tr><td>${d.name || '-'}</td><td>${formatNumber(savings)}</td><td style="color:var(--success); font-weight:700;">${formatNumber(profit)}</td><td style="color:var(--primary-color);">${formatNumber(companyShare)}</td></tr>`;
-                }).join('')}</tbody>
+                const savings = d.savings || 0;
+                const profit = (_globalSavingsSum > 0) ? (savings / _globalSavingsSum) * _globalProfitSum * (d.profitPercentage || 100) / 100 : 0;
+                const companyScale = (100 - (d.profitPercentage || 100)) / 100;
+                const companyShare = (_globalSavingsSum > 0) ? (savings / _globalSavingsSum) * _globalProfitSum * companyScale : 0;
+                return `<tr><td>${d.name || '-'}</td><td>${formatNumber(savings)}</td><td style="color:var(--success); font-weight:700;">${formatNumber(profit)}</td><td style="color:var(--primary-color);">${formatNumber(companyShare)}</td></tr>`;
+            }).join('')}</tbody>
             </table>`;
         }
         else if (type === 'investments') {
@@ -3217,9 +3325,9 @@ window.viewReport = async (type, fromDate = null, toDate = null, downloadOnly = 
             html = `<table class="report-table">
                 <thead><tr><th>${t['label-project-name']}</th><th>${t['label-date']}</th><th>${t['label-status']}</th><th>${t['label-invested']}</th><th>${t['label-profit']}</th></tr></thead>
                 <tbody>${docs.map(d => {
-                    const status = (d.status === 'withdrawn' || d.status === 'completed') ? (t['label-completed'] || 'Completed') : (t['label-ongoing'] || 'Ongoing');
-                    return `<tr><td>${d.sector || '-'}</td><td>${d.date || '-'}</td><td>${status}</td><td>${formatNumber(d.amount || 0)}</td><td style="color:var(--success);">${formatNumber(d.profitAmount || 0)}</td></tr>`;
-                }).join('')}</tbody>
+                const status = (d.status === 'withdrawn' || d.status === 'completed') ? (t['label-completed'] || 'Completed') : (t['label-ongoing'] || 'Ongoing');
+                return `<tr><td>${d.sector || '-'}</td><td>${d.date || '-'}</td><td>${status}</td><td>${formatNumber(d.amount || 0)}</td><td style="color:var(--success);">${formatNumber(d.profitAmount || 0)}</td></tr>`;
+            }).join('')}</tbody>
             </table>`;
         }
         else if (type === 'members') {
@@ -3228,13 +3336,13 @@ window.viewReport = async (type, fromDate = null, toDate = null, downloadOnly = 
             html = `<table class="report-table">
                 <thead><tr><th>${t['label-name']}</th><th>${t['label-phone']}</th><th>${t['label-email']}</th><th>${t['label-share-pct']}</th><th>${t['label-address']}</th></tr></thead>
                 <tbody>${snap.docs.map(doc => {
-                    const d = doc.data();
-                    return `<tr><td>${d.name || 'N/A'}</td><td>${d.phone || '-'}</td><td>${d.email}</td><td>${d.profitPercentage || 100}%</td><td>${d.address || '-'}</td></tr>`;
-                }).join('')}</tbody>
+                const d = doc.data();
+                return `<tr><td>${d.name || 'N/A'}</td><td>${d.phone || '-'}</td><td>${d.email}</td><td>${d.profitPercentage || 100}%</td><td>${d.address || '-'}</td></tr>`;
+            }).join('')}</tbody>
             </table>`;
         }
         else if (type === 'archived') {
-            reportTitle = currentLang === 'bn' ? 'আর্কাইভ' : "Deleted Members Archive";
+            reportTitle = currentLang === 'bn' ? 'Ã Â¦â€ Ã Â¦Â°Ã Â§ÂÃ Â¦â€¢Ã Â¦Â¾Ã Â¦â€¡Ã Â¦Â­' : "Deleted Members Archive";
             const snap = await db.collection('archivedMembers').get();
             if (snap.empty) {
                 html = `<p style="text-align:center; padding:20px;">Empty Archive</p>`;
@@ -3242,20 +3350,20 @@ window.viewReport = async (type, fromDate = null, toDate = null, downloadOnly = 
                 html = `<table class="report-table">
                     <thead><tr><th>Date</th><th>Name</th><th>Payout</th></tr></thead>
                     <tbody>${snap.docs.map(doc => {
-                        const d = doc.data();
-                        const dt = d.deletedAt ? new Date(d.deletedAt.seconds * 1000).toLocaleDateString() : 'N/A';
-                        return `<tr><td>${dt}</td><td>${d.name || 'N/A'}</td><td>${formatNumber(d.finalPayout || 0)}</td></tr>`;
-                    }).join('')}</tbody>
+                    const d = doc.data();
+                    const dt = d.deletedAt ? formatDate(d.deletedAt) : 'N/A';
+                    return `<tr><td>${dt}</td><td>${d.name || 'N/A'}</td><td>${formatNumber(d.finalPayout || 0)}</td></tr>`;
+                }).join('')}</tbody>
                 </table>`;
             }
         }
         else if (type === 'deposits') {
-            reportTitle = currentLang === 'bn' ? 'ডিপোজিট লেজার' : 'Deposit Ledger';
+            reportTitle = currentLang === 'bn' ? 'à¦¡à¦¿à¦ªà§‹à¦œà¦¿à¦Ÿ à¦²à§‡à¦œà¦¾à¦°' : 'Deposit Ledger';
             const usersSnap = await db.collection('users').get();
             const usersMap = {};
             usersSnap.forEach(u => usersMap[u.id] = u.data());
             const snap = await db.collection('deposits').where('status', '==', 'approved').orderBy('timestamp', 'desc').get();
-            
+
             if (snap.empty) {
                 html = `<p style="text-align:center; padding:20px;">No records</p>`;
             } else {
@@ -3268,7 +3376,7 @@ window.viewReport = async (type, fromDate = null, toDate = null, downloadOnly = 
 
                 if (downloadOnly) {
                     let fullHtml = '';
-                    const sortedUids = Object.keys(grouped).sort((a,b) => (usersMap[a]?.name || '').localeCompare(usersMap[b]?.name || ''));
+                    const sortedUids = Object.keys(grouped).sort((a, b) => (usersMap[a]?.name || '').localeCompare(usersMap[b]?.name || ''));
                     sortedUids.forEach(uid => {
                         const u = usersMap[uid];
                         const dList = grouped[uid];
@@ -3276,7 +3384,7 @@ window.viewReport = async (type, fromDate = null, toDate = null, downloadOnly = 
                             <h3>${u.name} (${u.email || ''})</h3>
                             <table class="report-table">
                                 <thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Approved By</th></tr></thead>
-                                <tbody>${dList.map(dep => `<tr><td>${dep.date || ''}</td><td>${dep.type || ''}${dep.month?` (${dep.month})`:''}</td><td>${formatNumber(dep.amount || 0)}</td><td>${dep.approvedBy || '-'}</td></tr>`).join('')}</tbody>
+                                <tbody>${dList.map(dep => `<tr><td>${dep.date || ''}</td><td>${dep.type || ''}${dep.month ? ` (${dep.month})` : ''}</td><td>${formatNumber(dep.amount || 0)}</td><td>${dep.approvedBy || '-'}</td></tr>`).join('')}</tbody>
                             </table>
                         </div>`;
                     });
@@ -3286,7 +3394,7 @@ window.viewReport = async (type, fromDate = null, toDate = null, downloadOnly = 
                 }
 
                 window.DEPOSIT_LEDGER_SYSTEM = { users: usersMap, groups: grouped };
-                
+
                 window.renderMemberCardList = () => {
                     const { users, groups } = window.DEPOSIT_LEDGER_SYSTEM;
                     let listHtml = `<div style="padding: 10px;"><div style="display: grid; gap: 15px;">`;
@@ -3311,7 +3419,7 @@ window.viewReport = async (type, fromDate = null, toDate = null, downloadOnly = 
                             <h3>${user.name}</h3>
                             <table class="report-table">
                                 <thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Approved By</th></tr></thead>
-                                <tbody>${deps.map(d => `<tr><td>${d.date}</td><td>${d.type}${d.month?` (${d.month})`:''}</td><td>${formatNumber(d.amount)}</td><td>${d.approvedBy || '-'}</td></tr>`).join('')}</tbody>
+                                <tbody>${deps.map(d => `<tr><td>${d.date}</td><td>${d.type}${d.month ? ` (${d.month})` : ''}</td><td>${formatNumber(d.amount)}</td><td>${d.approvedBy || '-'}</td></tr>`).join('')}</tbody>
                             </table>
                         </div>`;
                 };
@@ -3334,7 +3442,7 @@ window.viewReport = async (type, fromDate = null, toDate = null, downloadOnly = 
             downloadBtn.onclick = async () => {
                 const originalBtnText = downloadBtn.innerHTML;
                 downloadBtn.disabled = true;
-                downloadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'এক্সপোর্ট হচ্ছে...' : 'Exporting...'}`;
+                downloadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${currentLang === 'bn' ? 'Ã Â¦ÂÃ Â¦â€¢Ã Â§ÂÃ Â¦Â¸Ã Â¦ÂªÃ Â§â€¹Ã Â¦Â°Ã Â§ÂÃ Â¦Å¸ Ã Â¦Â¹Ã Â¦Å¡Ã Â§ÂÃ Â¦â€ºÃ Â§â€¡...' : 'Exporting...'}`;
                 const filename = `${type}_report_${new Date().toISOString().split('T')[0]}.pdf`;
                 const orientation = (type === 'members') ? 'landscape' : 'portrait';
                 await generatePDFFromHTML(contentEl.innerHTML, filename, reportTitle, orientation);
@@ -3435,7 +3543,7 @@ window.togglePermissionsUI = () => {
 
 window.repairAllDuesData = async () => {
     if (!confirm("This will recalculate all member dues and backfill missing 'Approved By' data. Continue?")) return;
-    
+
     const btn = document.getElementById('repairDuesBtn');
     if (btn) {
         btn.disabled = true;
@@ -3445,7 +3553,7 @@ window.repairAllDuesData = async () => {
     try {
         const usersSnap = await db.collection('users').get();
         const depositsSnap = await db.collection('deposits').where('status', '==', 'approved').get();
-        
+
         const depositMap = {};
         const updateBatch = db.batch();
         let updateCount = 0;
@@ -3473,7 +3581,7 @@ window.repairAllDuesData = async () => {
         usersSnap.forEach(userDoc => {
             const uid = userDoc.id;
             const deps = depositMap[uid] || [];
-            
+
             const dues = {
                 admissionPaid: 0,
                 monthlyPaidCount: 0,

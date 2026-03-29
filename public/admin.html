@@ -4,8 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Grow Halal</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Grow Halal</title>
+    <link rel="stylesheet" href="style.css?v=13">
+
+    <!-- INLINE FONT OVERRIDE TO BYPASS LOCAL BROWSER CACHE -->
+    <style>
+        @font-face {
+            font-family: 'GrowWestInline';
+            src: url('GrowWestRegular-vm1qA.ttf');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        .logo,
+        .logo *,
+        .logo span,
+        .branding-text {
+            font-family: var(--font-branding) !important;
+            text-transform: lowercase !important;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
 </head>
 
 <body class="animate-fade">
@@ -13,8 +35,10 @@
         <nav>
             <div class="logo">
                 <img src="logo.png" alt="Grow Halal">
-                Grow<span>Halal</span> <small
-                    style="font-size: 0.7rem; color: var(--text-muted);">(Admin)</small></div>
+                <span>Grow Halal</span>
+                <small
+                    style="font-size: 0.7rem; color: var(--text-muted); font-style: normal; font-family: var(--font-main); letter-spacing: 0; margin-left: 10px; z-index: 20;">(Admin)</small>
+            </div>
             <button onclick="logout()" class="btn btn-link">Sign Out</button>
         </nav>
     </header>
@@ -51,9 +75,14 @@
         <p>&copy; 2026 Grow Halal. Admin Dashboard.</p>
     </footer>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <!-- PDF Generation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="app.js?v=6" defer></script>
+    <script src="app.js?v=11" defer></script>
 </body>
 
 </html>
